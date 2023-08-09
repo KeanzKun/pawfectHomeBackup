@@ -30,7 +30,10 @@ const ChangePassword = () => {
 
             if (response.status === 200) {
                 // Password is valid, navigate to the next screen
-                navigation.navigate("ChangePassword2");
+                navigation.reset({
+                    index: 0,
+                    routes: [{ name: 'ChangePassword2' }], // Navigate to the next screen and reset the navigation stack
+                  });
             } else {
                 // Handle error, show an alert or some feedback to the user
                 Alert.alert('Error', result.message);

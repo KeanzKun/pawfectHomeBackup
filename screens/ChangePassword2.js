@@ -1,10 +1,10 @@
-import React, {useState} from "react";
-import { Alert, Text, StyleSheet, Pressable, View, ScrollView, TouchableHighlight, Dimensions } from "react-native";
+import React, { useState } from "react";
+import { BackHandler, Alert, Text, StyleSheet, Pressable, View, ScrollView, TouchableHighlight, Dimensions } from "react-native";
 import { Button, Input } from "@rneui/themed";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect, CommonActions } from "@react-navigation/native";
 import { Color, FontFamily } from "../GlobalStyles";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { SERVER_ADDRESS } from '../config'; 
+import { SERVER_ADDRESS } from '../config';
 
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
@@ -15,10 +15,37 @@ const ChangePassword2 = () => {
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
 
+    const handleBackPress = () => {
+        // Construct the navigation action to target the nested navigator
+        navigation.dispatch(
+          CommonActions.navigate({
+            name: 'Main', // The name of the screen that hosts the bottom tab navigator
+            params: {
+              screen: 'AccountSetting', // The name of the target screen inside the bottom tab navigator
+            },
+          })
+        );
+      
+        return true; // Return true to prevent the default back action
+      };
+
+    // Use the useFocusEffect hook to add the custom back handler when the screen is focused
+    useFocusEffect(
+        React.useCallback(() => {
+            // Add the custom back handler when the screen is focused
+            BackHandler.addEventListener('hardwareBackPress', handleBackPress);
+
+            // Return a cleanup function that removes the custom back handler when the screen is unfocused
+            return () => {
+                BackHandler.removeEventListener('hardwareBackPress', handleBackPress);
+            };
+        }, []) // Empty dependency array means this effect will run only when the screen is focused or unfocused
+    );
+
     // Function to handle the password update
     const handleUpdatePassword = async () => {
 
-        
+
         if (newPassword !== confirmPassword) {
             Alert.alert('Error', 'Passwords do not match');
             return;

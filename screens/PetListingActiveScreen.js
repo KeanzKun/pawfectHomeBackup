@@ -65,11 +65,9 @@ const PetListingActiveScreen = () => {
     useEffect(() => {
         // Add focus listener
         const unsubscribe = navigation.addListener('focus', () => {
-          console.log('PetListingActiveScreen is focused');
           getActiveListing();
         });
     
-        console.log('PetListingActiveScreen re-rendered');
         getActiveListing();
     
         // Clean up the listener when the component is unmounted

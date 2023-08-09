@@ -37,7 +37,11 @@ const Login = () => {
         // Store the token
         await AsyncStorage.setItem('token', json.token);
 
-        navigation.navigate('Main'); // Navigate to the main screen on successful login
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Main' }], // Navigate to the main screen and reset the navigation stack
+        }); 
+        
       } else {
         setModalMessage(json.message); // Set the message
         setModalVisible(true); // Show the modal

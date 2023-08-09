@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, TextInput, Button, FlatList, Image, Modal, Animated, TouchableOpacity, Pressable, StyleSheet, Dimensions } from 'react-native';
+import { View, BackHandler ,Text, TextInput, Button, FlatList, Image, Modal, Animated, TouchableOpacity, Pressable, StyleSheet, Dimensions } from 'react-native';
 import { Color, FontFamily } from "../GlobalStyles";
 import { useNavigation } from '@react-navigation/native';
 import TextStroke from '../components/TextStroke';
 import RNPickerSelect from 'react-native-picker-select';
 import SearchModal from '../components/SearchModal';
-import { SERVER_ADDRESS } from '../config'; 
+import { SERVER_ADDRESS } from '../config';
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
 
@@ -43,7 +43,22 @@ const HomeScreen = () => {
       setRefreshing(false);
     }
   }, []);
-  
+
+  useEffect(() => {
+    // Handle the back button press event
+    const handleBackPress = () => {
+      BackHandler.exitApp(); // Exit the app
+      return true; // Prevent default behavior
+    };
+
+    // Add the event listener
+    BackHandler.addEventListener('hardwareBackPress', handleBackPress);
+
+    // Return a cleanup function to remove the event listener
+    return () => {
+      BackHandler.removeEventListener('hardwareBackPress', handleBackPress);
+    };
+  }, []);
 
   useEffect(() => {
     fetchData();
@@ -55,7 +70,7 @@ const HomeScreen = () => {
 
 
     return (
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.item}
         onPress={() => navigation.navigate("PetDetails", { listingID: item.listing.listingID, petAge: petAge })}  // Pass the listing ID
       >
