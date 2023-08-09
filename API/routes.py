@@ -2,6 +2,7 @@ from flask import Flask, jsonify, send_from_directory, request
 from models import db, Vet, User, Pets, Listing, ReportListing, Pet_Owner
 from werkzeug.security import check_password_hash, generate_password_hash
 import jwt
+from datetime import datetime
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://us3r:1234@localhost/pawfecthome'
@@ -82,7 +83,6 @@ def get_user_details():
 
 def get_user_id():
     token = request.headers['Authorization'].split(' ')[1] # Assuming token is in 'Bearer token' format
-    print('Backend token:', token) # Print the token
     decoded_token = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
     return decoded_token['user_id']
 
@@ -138,6 +138,8 @@ def update_listing_status(listingID):
     if listing:
         # Update the listing_status
         listing.listing_status = listing_status
+        # Update the listing_delist_date with the current date
+        listing.listing_delist_date = datetime.utcnow()
         db.session.commit()
         return jsonify({'message': 'Listing status updated successfully'}), 200
     else:
@@ -228,6 +230,24 @@ def get_history_listings():
         })
     return jsonify(result), 200
 
+from werkzeug.security import generate_password_hash
+
+@app.route('/api/change-password', methods=['POST'])
+def change_password():
+    user_id = get_user_id()  # Assuming you have this function from earlier
+    new_password = request.json['new_password']
+
+    user = User.query.filter(User.userID == user_id).first()
+    if user:
+        #hashed_password = generate_password_hash(new_password, method='sha256')
+        #user.user_password = hashed_password
+        user.user_password = new_password
+        db.session.commit()
+        return jsonify({'message': 'Password updated successfully'}), 200
+    else:
+        return jsonify({'message': 'User not found'}), 404
+
+
 @app.route('/api/listings/missing', methods=['GET'])
 def get_missing_listings():
     listings = Listing.query.filter_by(listing_type='missing').all()
@@ -242,6 +262,16 @@ def get_missing_listings():
         })
     return jsonify(result), 200
 
+@app.route('/api/validate-password', methods=['POST'])
+def validate_password():
+    user_id = get_user_id() 
+    current_password = request.json['current_password']
+
+    user = User.query.filter(User.userID == user_id).first()
+    if user and (user.user_password == current_password):
+        return jsonify({'valid': True}), 200
+    else:
+        return jsonify({'valid': False, 'message': 'Current password does not match'}), 400
 
 @app.route('/api/listings/<int:listingID>', methods=['GET'])
 def get_listing(listingID):

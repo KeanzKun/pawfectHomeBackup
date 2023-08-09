@@ -5,7 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import TextStroke from '../components/TextStroke';
 import RNPickerSelect from 'react-native-picker-select';
 import SearchModal from '../components/SearchModal';
-
+import { SERVER_ADDRESS } from '../config'; 
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
 
@@ -34,7 +34,7 @@ const HomeScreen = () => {
   const fetchData = useCallback(async () => {
     setRefreshing(true);
     try {
-      const response = await fetch('http://10.0.2.2:5000/api/listings'); // Use the new endpoint
+      const response = await fetch(`${SERVER_ADDRESS}/api/listings`); // Use the new endpoint
       const json = await response.json();
       setData(json);
     } catch (error) {
@@ -50,7 +50,7 @@ const HomeScreen = () => {
   }, [fetchData]);
 
   const renderItem = ({ item }) => {
-    const imageUrl = `http://10.0.2.2:5000/api/pets/pet_image/${item.pet.pet_photo}`; // Fetch pet details from pet object
+    const imageUrl = `${SERVER_ADDRESS}/api/pets/pet_image/${item.pet.pet_photo}`; // Fetch pet details from pet object
     const petAge = getAgeFromDate(item.pet.pet_age);  // Fetch pet details from pet object
 
 

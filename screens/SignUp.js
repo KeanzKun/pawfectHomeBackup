@@ -221,6 +221,7 @@ const SignUp = () => {
                             required={true}
                             onChangeText={handleConfirmPasswordChange} // Call the handleConfirmPasswordChange function
                             inputStyle={styles.usernameInput}
+                            secureTextEntry={true}
                         />
                         {!isPasswordMatch && <Text style={styles.warningText}>Passwords do not match.</Text>}
 

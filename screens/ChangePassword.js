@@ -1,14 +1,44 @@
-import React from "react";
-import { Text, StyleSheet, Pressable, View, ScrollView, TouchableHighlight, Dimensions } from "react-native";
+import React, {useState, useEffect} from "react";
+import { Alert, Text, StyleSheet, Pressable, View, ScrollView, TouchableHighlight, Dimensions } from "react-native";
 import { Button, Input } from "@rneui/themed";
 import { useNavigation } from "@react-navigation/native";
 import { Color, FontFamily } from "../GlobalStyles";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const windowHeight = Dimensions.get("window").height;
 
 const ChangePassword = () => {
     const navigation = useNavigation();
+    const [currentPassword, setCurrentPassword] = useState('');
 
+    const handleSubmit = async () => {
+        try {
+            const token = await AsyncStorage.getItem('token'); // Retrieve token
+            // send a request to your server with the current password
+            const response = await fetch('http://10.0.2.2:5000/api/validate-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token // replace with your user's token
+                },
+
+                body: JSON.stringify({ current_password: currentPassword })
+            });
+            console.log(currentPassword);
+            const result = await response.json();
+
+            if (response.status === 200) {
+                // Password is valid, navigate to the next screen
+                navigation.navigate("ChangePassword2");
+            } else {
+                // Handle error, show an alert or some feedback to the user
+                Alert.alert('Error', result.message);
+            }
+        } catch (error) {
+            console.error(error);
+            // Handle the error as needed
+        }
+    };
     return (
 
         <ScrollView contentContainerStyle={styles.container}>
@@ -32,6 +62,8 @@ const ChangePassword = () => {
                     <Input
                         required={true}
                         inputStyle={styles.usernameInput}
+                        onChangeText={text => setCurrentPassword(text)} // Update the state with the input
+                        secureTextEntry={true}
                     />
                 </View>
             </View>
@@ -39,7 +71,7 @@ const ChangePassword = () => {
             <View style={styles.buttonFrame}>
                 <TouchableHighlight
                     style={styles.loginButton}
-                    onPress={() => navigation.navigate("ChangePassword2")}
+                    onPress={handleSubmit} // Call the function when pressed
                     underlayColor={Color.sandybrown}
                 >
                     <Text style={styles.loginButtonText}>Submit</Text>

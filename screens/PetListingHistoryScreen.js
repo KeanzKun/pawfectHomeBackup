@@ -61,8 +61,18 @@ const PetListingHistoryScreen = () => {
     }, []);
 
     useEffect(() => {
-        getActiveListing(); // Call getActiveListing when userDetails changes
-    }, [userDetails]);
+        // Add focus listener
+        const unsubscribe = navigation.addListener('focus', () => {
+          console.log('PetListingActiveScreen is focused');
+          getActiveListing();
+        });
+    
+        console.log('PetListingActiveScreen re-rendered');
+        getActiveListing();
+    
+        // Clean up the listener when the component is unmounted
+        return unsubscribe;
+      }, [userDetails]);
 
     const renderItem = ({ item }) => {
         const imageUrl = `http://10.0.2.2:5000/api/pets/pet_image/${item.pet.pet_photo}`; // Fetch pet details from pet object

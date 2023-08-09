@@ -32,6 +32,7 @@ import VetDetails from "./screens/VetDetails";
 import MissingPetDetails from "./screens/MissingPetDetails";
 import PetListingDetails from "./screens/PetListingDetails";
 import PetListingHistoryDetails from "./screens/PetListingHistoryDetails";
+import PasswordChanged from "./screens/PasswordChanged";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -116,6 +117,7 @@ const App = () => {
         <Stack.Screen name="MissingPetDetails" component={MissingPetDetails} />
         <Stack.Screen name="PetListingDetails" component={PetListingDetails} />
         <Stack.Screen name="PetListingHistoryDetails" component={PetListingHistoryDetails} />
+        <Stack.Screen name="PasswordChanged" component={PasswordChanged} />
         <Stack.Screen name="Main" component={BottomTabNavigator} />
         <Stack.Screen name="Top" component={TopTabNavigator} options={{
           headerShown: true,

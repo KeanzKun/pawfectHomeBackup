@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, FlatList, Image, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import { View, Alert, Text, TextInput, Button, FlatList, Image, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { Color, FontFamily } from "../GlobalStyles";
 import { Header } from '@react-navigation/elements';
 import { useNavigation } from '@react-navigation/native';
@@ -15,6 +15,7 @@ const PetListingActiveScreen = () => {
     const [userDetails, setUserDetails] = useState(null);
     const navigation = useNavigation();
     const [listingDetails, setListingDetails] = useState(null);
+    const [reloadList, setReloadList] = useState(false); // State variable for triggering reload
 
     function getAgeFromDate(dateOfBirth) {
         const today = new Date();
@@ -35,7 +36,6 @@ const PetListingActiveScreen = () => {
             const userID = userDetails.user.userID;
 
             const token = await AsyncStorage.getItem('token'); // Retrieve token
-            console.log('AAAA' + token);
 
             fetch(`http://10.0.2.2:5000/api/listings/active?userID=${userID}`, {
                 headers: {
@@ -62,8 +62,18 @@ const PetListingActiveScreen = () => {
     }, []);
 
     useEffect(() => {
-        getActiveListing(); // Call getActiveListing when userDetails changes
-    }, [userDetails]);
+        // Add focus listener
+        const unsubscribe = navigation.addListener('focus', () => {
+          console.log('PetListingActiveScreen is focused');
+          getActiveListing();
+        });
+    
+        console.log('PetListingActiveScreen re-rendered');
+        getActiveListing();
+    
+        // Clean up the listener when the component is unmounted
+        return unsubscribe;
+      }, [userDetails]);
 
     const renderItem = ({ item }) => {
         const imageUrl = `http://10.0.2.2:5000/api/pets/pet_image/${item.pet.pet_photo}`; // Fetch pet details from pet object
@@ -88,10 +98,11 @@ const PetListingActiveScreen = () => {
     return (
         <View style={styles.container}>
             <FlatList
-                data={listingDetails} // Use the fetched data
+                data={listingDetails}
                 renderItem={renderItem}
-                keyExtractor={listingDetails => listingDetails.listing.id}
+                keyExtractor={(item) => item.listing.listingID.toString()}
                 numColumns={2}
+                extraData={reloadList}
             />
             <FloatingAction
                 color='#FF9E5C'

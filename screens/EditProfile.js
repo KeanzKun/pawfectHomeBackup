@@ -90,7 +90,7 @@ const EditProfile = () => {
                 <View style={styles.redirectSignUp}>
                     <TouchableHighlight
                         style={styles.loginButton}
-                        onPress={() => navigation.navigate("EmailVerification2")}
+                        onPress={() => navigation.navigate("AccountSetting")}
                         underlayColor={Color.sandybrown}
                     >
                         <Text style={styles.loginButtonText}>Submit</Text>

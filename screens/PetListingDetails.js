@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Dimensions, StyleSheet, ScrollView, Image, ActivityIndicator } from 'react-native';
+import { View, Alert, Text, TouchableOpacity, Dimensions, StyleSheet, ScrollView, Image, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome'; // Assuming you are using FontAwesome for icons
 import { Color, FontFamily } from "../GlobalStyles";
 import { useNavigation } from '@react-navigation/native';
+import { SERVER_ADDRESS } from '../config'; 
+
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
 
-function capitalizeFirstLetter(string) {
-    return string.charAt(0).toUpperCase() + string.slice(1);
-}
 
 
 function formatDate(dateString) {
@@ -35,7 +34,6 @@ const PetListingDetails = ({ route }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [buttonText, setButtonText] = useState(null);
 
-
     useEffect(() => {
         if (petDetails) {
             if (petDetails.listing.listing_type === "missing") {
@@ -51,7 +49,7 @@ const PetListingDetails = ({ route }) => {
             try {
                 setIsLoading(true);
                 const listingID = route.params.listingID;
-                const response = await fetch(`http://10.0.2.2:5000/api/listings/${listingID}`);
+                const response = await fetch(`${SERVER_ADDRESS}/api/listings/${listingID}`);
                 const json = await response.json();
                 setPetDetails(json);
                 const fullDescription = json.listing.listing_description;
@@ -78,23 +76,33 @@ const PetListingDetails = ({ route }) => {
             },
             body: JSON.stringify({ listing_status: status })
         });
-        const json = await response.json();
-        if (response.status === 200) {
-            // Update the local state with the new listing status
-            setPetDetails({
-                ...petDetails,
-                listing: {
-                    ...petDetails.listing,
-                    listing_status: status,
-                }
-            });
-            Alert.alert('Success', json.message);
-        } else {
-            // Handle the error response
-            Alert.alert('Error', json.message);
+    
+        console.log('API Response:', response.status, response.statusText);
+        const responseBody = await response.text();
+        console.log('API Response Body:', responseBody);
+    
+        try {
+            const json = JSON.parse(responseBody);
+    
+            if (response.status === 200) {
+                // Update the local state with the new listing status
+                setPetDetails({
+                    ...petDetails,
+                    listing: {
+                        ...petDetails.listing,
+                        listing_status: status,
+                    }
+                });
+                Alert.alert('Success', json.message); // Display the success message
+            } else {
+                // Handle the error response
+                Alert.alert('Error', json.message);
+            }
+        } catch (error) {
+            console.error('Error parsing JSON:', error);
         }
     };
-
+    
 
     const toggleDescription = () => {
         if (!petDetails) return;
@@ -165,7 +173,7 @@ const PetListingDetails = ({ route }) => {
                         )}
                     </View>
                     <View style={styles.listingDateContainer}>
-                        <Text style={styles.title}>{capitalizeFirstLetter(petDetails.listing.listing_status)} on:</Text>
+                        <Text style={styles.title}>Listed since:</Text>
                         <Text style={styles.date}>{formattedDate}</Text>
                     </View>
 
@@ -173,7 +181,10 @@ const PetListingDetails = ({ route }) => {
                         <TouchableOpacity
                             style={styles.loginButton}
                             underlayColor={Color.sandybrown}
-                            onPress={() => updateListingStatus(buttonText.toLowerCase())}
+                            onPress={() => {
+                                updateListingStatus(buttonText.toLowerCase());
+                                navigation.navigate('PetListingHistoryScreen',);
+                            }}
                         >
                             <Text style={styles.loginButtonText}>{buttonText}</Text>
                         </TouchableOpacity>
@@ -181,7 +192,10 @@ const PetListingDetails = ({ route }) => {
                         <TouchableOpacity
                             style={styles.loginButton}
                             underlayColor={Color.sandybrown}
-                            onPress={() => updateListingStatus('delisted')}
+                            onPress={() => {
+                                updateListingStatus('delisted')
+                                navigation.navigate('PetListingHistoryScreen');
+                            }}
                         >
                             <Text style={styles.loginButtonText}>Delist</Text>
                         </TouchableOpacity>

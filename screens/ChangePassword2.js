@@ -1,18 +1,57 @@
-import React from "react";
-import { Text, StyleSheet, Pressable, View, ScrollView, TouchableHighlight, Dimensions } from "react-native";
+import React, {useState} from "react";
+import { Alert, Text, StyleSheet, Pressable, View, ScrollView, TouchableHighlight, Dimensions } from "react-native";
 import { Button, Input } from "@rneui/themed";
 import { useNavigation } from "@react-navigation/native";
 import { Color, FontFamily } from "../GlobalStyles";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
 const ChangePassword2 = () => {
     const navigation = useNavigation();
 
+    // State variables to hold the new password and confirmed password
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+
+    // Function to handle the password update
+    const handleUpdatePassword = async () => {
+
+        
+        if (newPassword !== confirmPassword) {
+            Alert.alert('Error', 'Passwords do not match');
+            return;
+        }
+        const token = await AsyncStorage.getItem('token'); // Retrieve token
+
+        try {
+            const response = await fetch('http://10.0.2.2:5000/api/change-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token // Replace with your user's token
+                },
+                body: JSON.stringify({ new_password: newPassword })
+            });
+
+            const result = await response.json();
+
+            if (response.status === 200) {
+                // Password was updated, navigate to the next screen or show success message
+                navigation.navigate("PasswordChanged");
+            } else {
+                // Handle error, show an alert or some feedback to the user
+                Alert.alert('Error', result.message);
+            }
+        } catch (error) {
+            console.error(error);
+            // Handle the error as needed
+        }
+    };
     return (
         <ScrollView scrollEnabled={false}>
             <View style={[styles.container, { height: windowHeight }]}>
-                
+
                 <View style={{ flex: 5 }}>
                     <TouchableHighlight
                         style={styles.backButton}
@@ -31,6 +70,8 @@ const ChangePassword2 = () => {
                         <Input
                             required={true}
                             inputStyle={styles.inputText}
+                            onChangeText={text => setNewPassword(text)} // Update the state with the input
+                            secureTextEntry={true}
                         />
                     </View>
 
@@ -39,13 +80,15 @@ const ChangePassword2 = () => {
                         <Input
                             required={true}
                             inputStyle={styles.inputText}
+                            onChangeText={text => setConfirmPassword(text)} // Update the state with the input
+                            secureTextEntry={true}
                         />
                     </View>
                 </View>
                 <View style={styles.buttonFrame}>
                     <TouchableHighlight
                         style={styles.button}
-                        onPress={() => navigation.navigate("EmailVerification2")}
+                        onPress={handleUpdatePassword} // Call the handleUpdatePassword function when pressed
                         underlayColor={Color.sandybrown}
                     >
                         <Text style={styles.buttonText}>Reset Password</Text>
@@ -53,7 +96,7 @@ const ChangePassword2 = () => {
                 </View>
 
             </View>
-            </ScrollView>
+        </ScrollView>
     );
 };
 
