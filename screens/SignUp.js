@@ -214,6 +214,7 @@ const SignUp = () => {
                             required={true}
                             onChangeText={handlePasswordChange} // Call the handlePasswordChange function
                             inputStyle={styles.usernameInput}
+                            secureTextEntry={true}
                         />
 
                         <Text style={styles.emailLabel}>Confirm Password</Text>

@@ -1,23 +1,61 @@
-import React from "react";
-import { Text, StyleSheet, Pressable, View, ScrollView, TouchableHighlight, TouchableOpacity, Dimensions } from "react-native";
+import React, { useState } from "react";
+import { Modal, Text, StyleSheet, Pressable, View, ScrollView, TouchableHighlight, TouchableOpacity, Dimensions } from "react-native";
 import { Button, Input } from "@rneui/themed";
 import { useNavigation } from "@react-navigation/native";
 import { Color, FontFamily } from "../GlobalStyles";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
 
 const AccountSetting = () => {
     const navigation = useNavigation();
+    const [modalVisible, setModalVisible] = useState(false);
+
+    const logOut = async () => {
+        await AsyncStorage.removeItem('token'); // Remove the token from storage
+    };
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
+
+            <Modal
+                animationType="fade"
+                transparent={true}
+                visible={modalVisible}
+            >
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalView}>
+                        <Text style={styles.modalText}>Are you sure you want to Log out?</Text>
+
+                        <View style= {styles.modalButtonContainer}>
+                            <TouchableOpacity
+                                onPress={() => setModalVisible(false)}
+                                style={styles.modalButton}
+                            >
+                                <Text style={styles.modalButtonText}>No</Text>
+
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    logOut();
+                                    setModalVisible(false)
+                                    navigation.navigate("InitialPage"); // Navigate to the initial page after logging out
+                                }}
+                                style={styles.modalButton}
+                            >
+                                <Text style={styles.modalButtonText}>Yes, Logout</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
 
             <View style={styles.titleContainer}>
                 <Text style={styles.titleText}>Account Setting</Text>
             </View>
 
-            <View style={{flex: 1}}></View>
+            <View style={{ flex: 1 }}></View>
             <View style={styles.buttonFrame}>
                 <View style={styles.buttonContainer}>
                     <TouchableOpacity
@@ -25,7 +63,7 @@ const AccountSetting = () => {
                         onPress={() => navigation.navigate("ChangePassword")}
                         underlayColor={Color.transparent}
                     >
-                        <Text style ={{fontSize: 15,fontWeight: '500'}}>Change password</Text>
+                        <Text style={{ fontSize: 15, fontWeight: '500' }}>Change password</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -35,7 +73,7 @@ const AccountSetting = () => {
                         onPress={() => navigation.navigate("EditProfile")}
                         underlayColor={Color.transparent}
                     >
-                        <Text style ={{fontSize: 15,fontWeight: '500'}}>View profile</Text>
+                        <Text style={{ fontSize: 15, fontWeight: '500' }}>View profile</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -45,22 +83,25 @@ const AccountSetting = () => {
                         onPress={() => navigation.navigate("Top")}
                         underlayColor={Color.transparent}
                     >
-                        <Text style ={{fontSize: 15,fontWeight: '500'}}>Pet listing</Text>
+                        <Text style={{ fontSize: 15, fontWeight: '500' }}>Pet listing</Text>
                     </TouchableOpacity>
                 </View>
 
                 <View style={styles.buttonContainer}>
                     <TouchableOpacity
                         style={styles.button}
-                        onPress={() => navigation.navigate("InitialPage")}
+                        onPress={async () => {
+                            setModalVisible(true); // Show the modal
+                        }}
                         underlayColor={Color.transparent}
                     >
-                        <Text style={{fontSize: 15,fontWeight: '500',color: Color.sandybrown}}>Log out</Text>
+                        <Text style={{ fontSize: 15, fontWeight: '500', color: Color.sandybrown }}>Log out</Text>
                     </TouchableOpacity>
+
                 </View>
             </View>
             <View style={{ flex: 2 }}>
-                <Text style ={{fontWeight: '800',color: '#E23F29',marginTop: windowHeight * 0.05}}>Delete Account</Text>
+                <Text style={{ fontWeight: '800', color: '#E23F29', marginTop: windowHeight * 0.05 }}>Delete Account</Text>
             </View>
         </ScrollView>
     );
@@ -72,6 +113,51 @@ const styles = StyleSheet.create({
         backgroundColor: "#f5f5f5",
         alignItems: "flex-start",
         height: "100%",
+    },
+    modalButtonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        width: '100%',
+        height: '100%',
+        
+    },
+    modalText: {
+        fontSize: windowHeight * 0.03,
+        letterSpacing: 0.4,
+        color: Color.dimgray,
+        fontWeight: '900',
+        textAlign: 'center',
+    },
+    modalButtonText: {
+        fontSize: windowHeight * 0.02,
+        letterSpacing: 0.3,
+        color: Color.white,
+        fontFamily: FontFamily.interExtrabold,
+        fontWeight: "800",
+    },
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0,0,0,0.5)'
+    },
+    modalView: {
+        width: '75%',
+        height: '25%',
+        backgroundColor: 'white',
+        padding: '5%',
+        borderRadius: 30
+    },
+    modalButton: {
+        borderRadius: 87,
+        backgroundColor: Color.sandybrown,
+        marginHorizontal: '5%',
+        marginBottom : '3%',
+        width: '40%',
+        height: '30%',
+        alignItems: "center",
+        justifyContent: "center",
+        alignSelf: "center",
     },
     button: {
         color: "#c7c7c7",

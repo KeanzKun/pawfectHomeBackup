@@ -5,30 +5,29 @@ import { Color, FontFamily } from "../GlobalStyles";
 import { useNavigation } from '@react-navigation/native';
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
-
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 function formatDate(dateString) {
     const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN",
-                        "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+        "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
     let date = new Date(dateString);
     let day = date.getDate();
     let monthIndex = date.getMonth();
     let year = date.getFullYear();
-  
-    // Ensuring the day is two digits
-    if(day < 10) day = '0' + day;
-  
-    return day + ' ' + monthNames[monthIndex] + ' ' + year;
-  }
 
-  
+    // Ensuring the day is two digits
+    if (day < 10) day = '0' + day;
+
+    return day + ' ' + monthNames[monthIndex] + ' ' + year;
+}
+
 const PetDetails = ({ route }) => {
     const navigation = useNavigation();
     const [petDetails, setPetDetails] = useState(null);
     const [description, setDescription] = useState("");
     const [isFullDescriptionShown, setIsFullDescriptionShown] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
-
+    
     useEffect(() => {
         const fetchPetDetails = async () => {
             try {
@@ -72,6 +71,7 @@ const PetDetails = ({ route }) => {
         const imageUrl = `http://10.0.2.2:5000/api/pets/pet_image/${petDetails.pet.pet_photo}`;
         const { petAge } = route.params;
         const formattedDate = formatDate(petDetails.listing.listing_date);
+        const gender = 'gender-' + petDetails.pet.pet_gender;
 
         return (
 
@@ -95,7 +95,7 @@ const PetDetails = ({ route }) => {
 
                     <View key={1} style={styles.detailsContainer}>
                         <Text style={styles.petName}>
-                            {petDetails.pet.pet_name} <Icon name="venus" size={20} color="#900" />
+                            {petDetails.pet.pet_name} <MaterialCommunityIcons name={gender} color='#900' size={25} />
                         </Text>
                         <Text style={styles.detailText}>{petDetails.pet.pet_type}</Text>
                         <Text style={styles.detailText}>{petDetails.pet.pet_breed}</Text>
@@ -134,16 +134,16 @@ const PetDetails = ({ route }) => {
                         <Text style={[styles.title, { fontSize: 28 }]}>Contact The Owner</Text>
                         <View style={styles.contactButtons}>
                             <TouchableOpacity style={styles.contactButton}>
-                                <Icon name="phone" size={20} color="#900" />
+                                <MaterialCommunityIcons name="whatsapp" color='#900' size={30} />
                             </TouchableOpacity>
                             <TouchableOpacity style={styles.contactButton}>
-                                <Icon name="envelope" size={20} color="#900" />
+                                <MaterialCommunityIcons name="email-outline" color='#900' size={30} />
                             </TouchableOpacity>
                             <TouchableOpacity style={styles.contactButton}>
-                                <Icon name="whatsapp" size={20} color="#900" />
+                                <MaterialCommunityIcons name="phone" color='#900' size={30} />
                             </TouchableOpacity>
                             <TouchableOpacity style={styles.contactButton}>
-                                <Icon name="telegram" size={20} color="#900" />
+                                <MaterialCommunityIcons name="message-outline" color='#900' size={30} />
                             </TouchableOpacity>
                         </View>
                     </View>

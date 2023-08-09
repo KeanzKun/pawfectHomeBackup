@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ScrollView, View, Text, Image, StyleSheet, ActivityIndicator, TouchableOpacity, Dimensions } from "react-native";
+import { Alert, Linking, ScrollView, View, Text, Image, StyleSheet, ActivityIndicator, TouchableOpacity, Dimensions } from "react-native";
 import Icon from 'react-native-vector-icons/FontAwesome'; // Assuming you are using FontAwesome for icons
 import { Color, FontFamily } from "../GlobalStyles";
 import { useNavigation } from '@react-navigation/native';
@@ -14,8 +14,21 @@ const VetDetails = ({ route }) => {
     const [vetDetails, setVetDetails] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
 
+    const searchVetOnGoogle = async () => {
+        try {
+          const query = encodeURIComponent(vetDetails.vet_name);
+          const url = `https://www.google.com/search?q=${query}`;
+          await Linking.openURL(url);
+        } catch (error) {
+          // Handle the error as needed, such as logging it or displaying an alert
+          console.error('An error occurred:', error);
+          Alert.alert('Error', 'Unable to open the URL');
+        }
+      };
+
+
     useEffect(() => {
-        
+
         const fetchPetDetails = async () => {
             try {
                 setIsLoading(true);
@@ -63,7 +76,9 @@ const VetDetails = ({ route }) => {
                         </Text>
                         <Text style={styles.detailText}>{vetDetails.vet_hours}</Text>
                         <Text style={styles.detailText}>{vetDetails.vet_address}</Text>
-                        <Text style={styles.detailText}>Search on Google</Text>
+                        <TouchableOpacity onPress={searchVetOnGoogle}>
+                            <Text style={[styles.detailText, { color: Color.sandybrown }]}>Search on Google</Text>
+                        </TouchableOpacity>
                     </View>
 
                     <View style={styles.titleContainer}>

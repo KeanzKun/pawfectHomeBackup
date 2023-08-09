@@ -33,6 +33,7 @@ import MissingPetDetails from "./screens/MissingPetDetails";
 import PetListingDetails from "./screens/PetListingDetails";
 import PetListingHistoryDetails from "./screens/PetListingHistoryDetails";
 import PasswordChanged from "./screens/PasswordChanged";
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -62,18 +63,7 @@ const BottomTabNavigator = () => {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-        // tabBarIcon: ({ focused, color, size }) => {
-        //   let iconName;
 
-        //   if (route.name === 'Home') {
-        //     iconName = focused ? 'ios-home-sharp' : 'ios-home-outline';
-        //   } else if (route.name === 'Favourites') {
-        //     iconName = focused ? 'ios-heart-sharp' : 'ios-heart-outline';
-        //   }
-
-        //   // You can return any component that you like here!
-        //   return <Ionicons name={iconName} size={size} color={color} />;
-        // },
         headerShown: false,
         tabBarActiveTintColor: '#FF9E5C',
         tabBarInactiveTintColor: 'white',
@@ -85,10 +75,32 @@ const BottomTabNavigator = () => {
         tabBarLabelStyle: { paddingBottom: windowHeight * 0.01, fontSize: windowHeight * 0.016 },
       })}
     >
-      <Tab.Screen name="HomeScreen" component={HomeScreen} options={{ tabBarLabel: 'Home' }} />
-      <Tab.Screen name="VetScreen" component={VetScreen} options={{ tabBarLabel: 'Vet' }} />
-      <Tab.Screen name="MissingPet" component={MissingPetScreen} options={{ tabBarLabel: 'Missing Pet' }} />
-      <Tab.Screen name="AccountSetting" component={AccountSetting} options={{ tabBarLabel: 'Account' }} />
+      <Tab.Screen
+        name="HomeScreen"
+        component={HomeScreen}
+        options={{
+          tabBarLabel: 'Home',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="paw" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tab.Screen name="VetScreen" component={VetScreen} options={{
+        tabBarLabel: 'Vet', tabBarIcon: ({ color, size }) => (
+          <MaterialCommunityIcons name="hospital-marker" color={color} size={size} />
+        ),
+      }
+      } />
+      <Tab.Screen name="MissingPet" component={MissingPetScreen} options={{
+        tabBarLabel: 'Missing Pet', tabBarIcon: ({ color, size }) => (
+          <MaterialCommunityIcons name="crosshairs-question" color={color} size={size} />
+        ),
+      }} />
+      <Tab.Screen name="AccountSetting" component={AccountSetting} options={{
+        tabBarLabel: 'Account', tabBarIcon: ({ color, size }) => (
+          <MaterialCommunityIcons name="account-circle" color={color} size={size} />
+        ),
+      }} />
     </Tab.Navigator>
   );
 };
@@ -121,7 +133,7 @@ const App = () => {
         <Stack.Screen name="Main" component={BottomTabNavigator} />
         <Stack.Screen name="Top" component={TopTabNavigator} options={{
           headerShown: true,
-          header: () => <CustomHeader title="Pet Listing"/>
+          header: () => <CustomHeader title="Pet Listing" />
         }} />
       </Stack.Navigator>
     </NavigationContainer>
