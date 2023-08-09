@@ -6,6 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { SERVER_ADDRESS } from '../config'; 
 
 function formatDate(dateString) {
     const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN",
@@ -33,7 +34,7 @@ const PetDetails = ({ route }) => {
             try {
                 setIsLoading(true);
                 const listingID = route.params.listingID;
-                const response = await fetch(`http://10.0.2.2:5000/api/listings/${listingID}`);
+                const response = await fetch(`${SERVER_ADDRESS}/api/listings/${listingID}`);
                 const json = await response.json();
                 setPetDetails(json);
                 const fullDescription = json.listing.listing_description;

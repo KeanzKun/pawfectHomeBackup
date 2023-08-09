@@ -3,6 +3,8 @@ import { Alert, Linking, ScrollView, View, Text, Image, StyleSheet, ActivityIndi
 import Icon from 'react-native-vector-icons/FontAwesome'; // Assuming you are using FontAwesome for icons
 import { Color, FontFamily } from "../GlobalStyles";
 import { useNavigation } from '@react-navigation/native';
+import { SERVER_ADDRESS } from '../config'; 
+
 import MapView from 'react-native-maps';
 
 
@@ -33,7 +35,7 @@ const VetDetails = ({ route }) => {
             try {
                 setIsLoading(true);
                 const vetID = route.params.vetID;
-                const response = await fetch(`http://10.0.2.2:5000/api/vets/${vetID}`);
+                const response = await fetch(`${SERVER_ADDRESS}/api/vets/${vetID}`);
                 const json = await response.json();
                 setVetDetails(json[0]);
                 setIsLoading(false);

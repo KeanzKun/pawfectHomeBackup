@@ -4,6 +4,7 @@ import { Button, Input } from "@rneui/themed";
 import { useNavigation } from "@react-navigation/native";
 import { Color, FontFamily } from "../GlobalStyles";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { SERVER_ADDRESS } from '../config'; 
 
 
 const windowHeight = Dimensions.get("window").height;
@@ -20,7 +21,7 @@ const Login = () => {
   // Function to handle login
   const handleLogin = async () => {
     try {
-      const response = await fetch('http://10.0.2.2:5000/api/login', {
+      const response = await fetch(`${SERVER_ADDRESS}/api/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

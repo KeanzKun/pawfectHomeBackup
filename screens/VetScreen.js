@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, Button, FlatList, Image, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { Color, FontFamily } from "../GlobalStyles";
 import { useNavigation } from '@react-navigation/native';
+import { SERVER_ADDRESS } from '../config'; 
 
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
@@ -12,7 +13,7 @@ const VetScreen = () => {
 
   useEffect(() => {
 
-    let url = 'http://10.0.2.2:5000/api/vets';
+    let url = `${SERVER_ADDRESS}/api/vets`;
     console.log(url);
     // Fetching vet data from the API
     fetch(url)

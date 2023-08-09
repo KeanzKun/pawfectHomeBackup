@@ -3,6 +3,7 @@ import { View, Text, TextInput, Button, FlatList, Image, Modal, Animated, Toucha
 import { Color, FontFamily } from "../GlobalStyles";
 import { useNavigation } from '@react-navigation/native';
 import TextStroke from '../components/TextStroke';
+import { SERVER_ADDRESS } from '../config'; 
 
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
@@ -31,7 +32,7 @@ const MissingPetScreen = () => {
   const fetchData = useCallback(async () => {
     setRefreshing(true);
     try {
-      const response = await fetch('http://10.0.2.2:5000/api/listings/missing');
+      const response = await fetch(`${SERVER_ADDRESS}/api/listings/missing`);
       const json = await response.json();
       setData(json);
     } catch (error) {

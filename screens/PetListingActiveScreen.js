@@ -7,6 +7,7 @@ import { FloatingAction } from "react-native-floating-action";
 import { fetchUserDetails, returnToken } from '../components/UserService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import TextStroke from '../components/TextStroke';
+import { SERVER_ADDRESS } from '../config'; 
 
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
@@ -37,7 +38,7 @@ const PetListingActiveScreen = () => {
 
             const token = await AsyncStorage.getItem('token'); // Retrieve token
 
-            fetch(`http://10.0.2.2:5000/api/listings/active?userID=${userID}`, {
+            fetch(`${SERVER_ADDRESS}/api/listings/active?userID=${userID}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                 },
@@ -76,7 +77,7 @@ const PetListingActiveScreen = () => {
       }, [userDetails]);
 
     const renderItem = ({ item }) => {
-        const imageUrl = `http://10.0.2.2:5000/api/pets/pet_image/${item.pet.pet_photo}`; // Fetch pet details from pet object
+        const imageUrl = `${SERVER_ADDRESS}/api/pets/pet_image/${item.pet.pet_photo}`; // Fetch pet details from pet object
         const petAge = getAgeFromDate(item.pet.pet_age);  // Fetch pet details from pet object
 
         return (

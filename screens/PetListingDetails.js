@@ -69,7 +69,7 @@ const PetListingDetails = ({ route }) => {
 
     const updateListingStatus = async (status) => {
         const listingID = petDetails.listing.listingID; // Get the listing ID from the petDetails
-        const response = await fetch(`http://10.0.2.2:5000/api/listings/update-status/${listingID}`, {
+        const response = await fetch(`${SERVER_ADDRESS}/api/listings/update-status/${listingID}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',

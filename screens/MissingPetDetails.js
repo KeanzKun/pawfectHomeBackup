@@ -3,6 +3,8 @@ import { ScrollView, View, Text, ActivityIndicator, Image, StyleSheet, Touchable
 import Icon from 'react-native-vector-icons/FontAwesome'; // Assuming you are using FontAwesome for icons
 import { Color, FontFamily } from "../GlobalStyles";
 import { useNavigation } from '@react-navigation/native';
+import { SERVER_ADDRESS } from '../config'; 
+
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
 
@@ -32,7 +34,7 @@ const MissingPetDetails = ({ route }) => {
             try {
                 setIsLoading(true);
                 const listingID = route.params.listingID;
-                const response = await fetch(`http://10.0.2.2:5000/api/listings/${listingID}`);
+                const response = await fetch(`${SERVER_ADDRESS}/api/listings/${listingID}`);
                 const json = await response.json();
                 setPetDetails(json);
                 const fullDescription = json.listing.listing_description;
@@ -68,7 +70,7 @@ const MissingPetDetails = ({ route }) => {
             </View>
         );
     } else {
-        const imageUrl = `http://10.0.2.2:5000/api/pets/pet_image/${petDetails.pet.pet_photo}`;
+        const imageUrl = `${SERVER_ADDRESS}/api/pets/pet_image/${petDetails.pet.pet_photo}`;
         const { petAge } = route.params;
         const formattedDate = formatDate(petDetails.listing.listing_date);
         return (

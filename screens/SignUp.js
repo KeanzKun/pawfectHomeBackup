@@ -4,6 +4,8 @@ import { Button, Input } from "@rneui/themed";
 import { useNavigation } from "@react-navigation/native";
 import { Color, FontFamily } from "../GlobalStyles";
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
+import { SERVER_ADDRESS } from '../config'; 
+
 const windowHeight = Dimensions.get("window").height;
 
 const SignUp = () => {
@@ -69,7 +71,7 @@ const SignUp = () => {
         setUserEmail(text);
         // Make a POST request to the API endpoint to check if email already exists
         try {
-            const response = await fetch('http://10.0.2.2:5000/api/check-email', {
+            const response = await fetch(`${SERVER_ADDRESS}/api/check-email`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -129,7 +131,7 @@ const SignUp = () => {
         }
 
         try {
-            const response = await fetch('http://10.0.2.2:5000/api/register', {
+            const response = await fetch(`${SERVER_ADDRESS}/api/register`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

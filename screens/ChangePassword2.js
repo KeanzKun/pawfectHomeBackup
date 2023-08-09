@@ -4,6 +4,7 @@ import { Button, Input } from "@rneui/themed";
 import { useNavigation } from "@react-navigation/native";
 import { Color, FontFamily } from "../GlobalStyles";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SERVER_ADDRESS } from '../config'; 
 
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
@@ -25,7 +26,7 @@ const ChangePassword2 = () => {
         const token = await AsyncStorage.getItem('token'); // Retrieve token
 
         try {
-            const response = await fetch('http://10.0.2.2:5000/api/change-password', {
+            const response = await fetch(`${SERVER_ADDRESS}/api/change-password`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
