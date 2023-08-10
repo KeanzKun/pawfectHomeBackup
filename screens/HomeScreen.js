@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, BackHandler, Text, TextInput, Button, FlatList, Image, Modal, Animated, TouchableOpacity, Pressable, StyleSheet, Dimensions } from 'react-native';
+import { ActivityIndicator, View, BackHandler, Text, TextInput, Button, FlatList, Image, Modal, Animated, TouchableOpacity, Pressable, StyleSheet, Dimensions } from 'react-native';
 import { Color, FontFamily } from "../GlobalStyles";
 import { useNavigation } from '@react-navigation/native';
 import TextStroke from '../components/TextStroke';
@@ -29,13 +29,25 @@ const HomeScreen = () => {
   const [data, setData] = useState([]);  // Initializing state to hold pet data
   const [refreshing, setRefreshing] = useState(false);
   const [filters, setFilters] = useState({});
+  const [selectedType, setSelectedType] = useState(null);
 
   const handleSearch = (searchFilters) => {
     setFilters(searchFilters);
   };
 
+  const handleTypePress = (type) => {
+    if (selectedType === type) {
+      setSelectedType(null); // If the type is already selected, deselect it
+      setFilters({ ...filters, petType: null });
+    } else {
+      setSelectedType(type); // Select the new type
+      setFilters({ ...filters, petType: type });
+    }
+  };
+
   const fetchData = useCallback(async () => {
     let url;
+    setRefreshing(true);
     if (Object.values(filters).some(value => value !== null)) {
       url = `${SERVER_ADDRESS}/api/search_listings?`;
       const params = [];
@@ -51,18 +63,15 @@ const HomeScreen = () => {
     try {
       console.log(url);
       const response = await fetch(url);
-      console.log('ccc');
       const json = await response.json();
-      console.log('aaa');
       setData(json);
-      console.log('aaa');
     } catch (error) {
       console.error(error);
     } finally {
       setRefreshing(false);
     }
   }, [filters]);
-  
+
 
   useEffect(() => {
     // Handle the back button press event
@@ -123,24 +132,40 @@ const HomeScreen = () => {
       </View>
 
       <View style={styles.buttonsContainer}>
-        <TouchableOpacity style={styles.button} onPress={() => { }}>
+
+        <TouchableOpacity
+          style={[styles.button, selectedType === "Cat" && styles.selectedButton]}
+          onPress={() => handleTypePress("Cat")}
+        >
           <Image source={require("../assets/icon/catIcon.png")} style={styles.filterIcon} />
           <Text>Cat</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={() => { }}>
+
+        <TouchableOpacity
+          style={[styles.button, selectedType === "Dog" && styles.selectedButton]}
+          onPress={() => handleTypePress("Dog")}
+        >
           <Image source={require("../assets/icon/dogIcon.png")} style={styles.filterIcon} />
           <Text>Dog</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={() => { }}>
+
+        <TouchableOpacity
+          style={[styles.button, selectedType === "Bird" && styles.selectedButton]}
+          onPress={() => handleTypePress("Bird")}
+        >
           <Image source={require("../assets/icon/birdIcon.png")} style={styles.filterIcon} />
           <Text>Bird</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={() => { }}>
+
+        <TouchableOpacity
+          style={[styles.button, selectedType === "Hamster" && styles.selectedButton]}
+          onPress={() => handleTypePress("Hamster")}
+        >
           <Image source={require("../assets/icon/hamsterIcon.png")} style={styles.filterIcon} />
           <Text>Hamster</Text>
         </TouchableOpacity>
-      </View>
 
+      </View>
       <FlatList
         data={data}
         renderItem={renderItem}
@@ -149,6 +174,7 @@ const HomeScreen = () => {
         onRefresh={fetchData}  // Add this line
         refreshing={refreshing}  // And this line
       />
+      
     </View>
   );
 };
@@ -220,6 +246,9 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
     borderRadius: 15,
+  },
+  selectedButton: {
+    backgroundColor: Color.sandybrown,
   },
   searchButton: {
     backgroundColor: 'white',

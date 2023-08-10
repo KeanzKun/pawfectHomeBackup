@@ -111,6 +111,7 @@ class ReportListing(db.Model):
 
 
 class Pet_Owner(db.Model):
+    __tablename__ = 'Pet_Owner'
     userID = db.Column(db.Integer, db.ForeignKey('user.userID'), primary_key=True)
     petID = db.Column(db.Integer, db.ForeignKey('pets.petID'), primary_key=True)
 

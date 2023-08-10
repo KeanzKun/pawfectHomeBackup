@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { StyleSheet, View, Text, Pressable, ScrollView, TouchableHighlight, Dimensions } from "react-native";
+import { BackHandler, StyleSheet, View, Text, Pressable, ScrollView, TouchableHighlight, Dimensions } from "react-native";
 import { useNavigation, useIsFocused } from "@react-navigation/native";
 import { Color, FontFamily } from "../GlobalStyles";
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -25,6 +25,22 @@ const InitialPage = () => {
       console.error(error);
     }
   };
+
+  useEffect(() => {
+    // Handle the back button press event
+    const handleBackPress = () => {
+      BackHandler.exitApp(); // Exit the app
+      return true; // Prevent default behavior
+    };
+
+    // Add the event listener
+    BackHandler.addEventListener('hardwareBackPress', handleBackPress);
+
+    // Return a cleanup function to remove the event listener
+    return () => {
+      BackHandler.removeEventListener('hardwareBackPress', handleBackPress);
+    };
+  }, []);
 
   useEffect(() => {
     if (isFocused) { // If the screen is focused, check the login status
@@ -57,7 +73,7 @@ const InitialPage = () => {
                 <Text style={styles.login1Typo}>Login</Text>
               </TouchableHighlight>
               <TouchableHighlight style={[styles.loginLayout]}
-                onPress={() => navigation.navigate("SignUpEnterEmail")}
+                onPress={() => navigation.navigate("SignUp")}
               >
                 <Text style={styles.login1Typo}>SignUp</Text>
               </TouchableHighlight>

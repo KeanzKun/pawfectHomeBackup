@@ -28,7 +28,7 @@ const AccountSetting = () => {
                     <View style={styles.modalView}>
                         <Text style={styles.modalText}>Are you sure you want to Log out?</Text>
 
-                        <View style= {styles.modalButtonContainer}>
+                        <View style={styles.modalButtonContainer}>
                             <TouchableOpacity
                                 onPress={() => setModalVisible(false)}
                                 style={styles.modalButton}
@@ -101,7 +101,15 @@ const AccountSetting = () => {
                 </View>
             </View>
             <View style={{ flex: 2 }}>
-                <Text style={{ fontWeight: '800', color: '#E23F29', marginTop: windowHeight * 0.05 }}>Delete Account</Text>
+                <TouchableOpacity
+                    style={styles.button}
+                    onPress={ () => {
+                        navigation.navigate('DeleteAccount');
+                    }}
+                    underlayColor={Color.transparent}
+                >
+                    <Text style={{ fontWeight: '800', color: '#E23F29', marginTop: windowHeight * 0.05 }}>Delete Account</Text>
+                </TouchableOpacity>
             </View>
         </ScrollView>
     );
@@ -119,7 +127,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         width: '100%',
         height: '100%',
-        
+
     },
     modalText: {
         fontSize: windowHeight * 0.03,
@@ -152,7 +160,7 @@ const styles = StyleSheet.create({
         borderRadius: 87,
         backgroundColor: Color.sandybrown,
         marginHorizontal: '5%',
-        marginBottom : '3%',
+        marginBottom: '3%',
         width: '40%',
         height: '30%',
         alignItems: "center",

@@ -33,6 +33,10 @@ import MissingPetDetails from "./screens/MissingPetDetails";
 import PetListingDetails from "./screens/PetListingDetails";
 import PetListingHistoryDetails from "./screens/PetListingHistoryDetails";
 import PasswordChanged from "./screens/PasswordChanged";
+import DeleteAccount from "./screens/DeleteAccount";
+import DeleteAccount2 from "./screens/DeleteAccount2";
+import DeleteAccount3 from "./screens/DeleteAccount3";
+
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const Stack = createNativeStackNavigator();
@@ -130,6 +134,10 @@ const App = () => {
         <Stack.Screen name="PetListingDetails" component={PetListingDetails} />
         <Stack.Screen name="PetListingHistoryDetails" component={PetListingHistoryDetails} />
         <Stack.Screen name="PasswordChanged" component={PasswordChanged} />
+        <Stack.Screen name="DeleteAccount" component={DeleteAccount} />
+        <Stack.Screen name="DeleteAccount2" component={DeleteAccount2} />
+        <Stack.Screen name="DeleteAccount3" component={DeleteAccount3} />
+        
         <Stack.Screen name="Main" component={BottomTabNavigator} />
         <Stack.Screen name="Top" component={TopTabNavigator} options={{
           headerShown: true,

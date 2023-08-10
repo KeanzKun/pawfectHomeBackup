@@ -29,8 +29,8 @@ const PetDetails = ({ route }) => {
     const [description, setDescription] = useState("");
     const [isFullDescriptionShown, setIsFullDescriptionShown] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
-    const [userDetails, setUserDetails] = useState(null);
     const [userContact, setUserContact] = useState(null);
+    
     useEffect(() => {
         const fetchPetDetails = async () => {
             try {

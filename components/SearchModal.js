@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Animated, Text, View, Pressable, StyleSheet, Modal, Dimensions, TouchableOpacity } from 'react-native';
+import { Animated, Text, TouchableWithoutFeedback, View, Pressable, StyleSheet, Modal, Dimensions, TouchableOpacity } from 'react-native';
 import { Picker } from '@react-native-picker/picker'; // Import Picker
 import { Color, FontFamily } from "../GlobalStyles";
 import GestureRecognizer from 'react-native-swipe-gestures';
@@ -38,72 +38,78 @@ const SearchModal = ({ modalVisible, setModalVisible, onSearch }) => {
         onRequestClose={() => {
           setModalVisible(false);
         }}>
-        <View style={styles.centeredView}>
-          <View
-            style={styles.modalView}>
-            <View style={{flexDirection: 'row'}}>
-              <Text style={styles.modalTitle}>Search</Text>
-              <TouchableOpacity
-                style={[styles.filterButton]} // you might want to define a specific style for this button
-                onPress={clearFilters}>
-                <Text style={styles.filterButtonText}>Clear Filters</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={styles.dropdownContainer}>
-              <Text style={styles.pickerTitleText}>Pet Type</Text>
-              <Picker
-                selectedValue={petType}
-                onValueChange={(itemValue) => setPetType(itemValue)}>
-                <Picker.Item label="Select a pet type..." value={null} />
-                <Picker.Item label="Cat" value="cat" />
-                <Picker.Item label="Dog" value="dog" />
+        <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+          <View style={styles.centeredView}>
+            <TouchableWithoutFeedback onPress={() => { }}>
+              <View
+                style={styles.modalView}>
+                <View style={{ flexDirection: 'row' }}>
+                  <Text style={styles.modalTitle}>Search</Text>
+                  <TouchableOpacity
+                    style={[styles.filterButton]} // you might want to define a specific style for this button
+                    onPress={clearFilters}>
+                    <Text style={styles.filterButtonText}>Clear Filters</Text>
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.dropdownContainer}>
+                  <Text style={styles.pickerTitleText}>Pet Type</Text>
+                  <Picker
+                    selectedValue={petType}
+                    onValueChange={(itemValue) => setPetType(itemValue)}>
+                    <Picker.Item label="Select a pet type..." value={null} />
+                    <Picker.Item label="Cat" value="cat" />
+                    <Picker.Item label="Dog" value="dog" />
 
-              </Picker>
-            </View>
-            <View style={styles.dropdownContainer}>
-              <Text style={styles.pickerTitleText}>Status</Text>
-              <Picker
-                selectedValue={status}
-                onValueChange={(itemValue) => setStatus(itemValue)}>
-                <Picker.Item label="Select a status..." value={null} />
-                <Picker.Item label="Re-Home" value="reHome" />
-                <Picker.Item label="Adopt" value="adopt" />
+                  </Picker>
+                </View>
+                <View style={styles.dropdownContainer}>
+                  <Text style={styles.pickerTitleText}>Status</Text>
+                  <Picker
+                    selectedValue={status}
+                    onValueChange={(itemValue) => setStatus(itemValue)}>
+                    <Picker.Item label="Select a status..." value={null} />
+                    <Picker.Item label="Re-Home" value="reHome" />
+                    <Picker.Item label="Adopt" value="adopt" />
 
-              </Picker>
-            </View>
-            <View style={styles.dropdownContainer}>
-              <Text style={styles.pickerTitleText}>Age</Text>
-              <Picker
-                selectedValue={age}
-                onValueChange={(itemValue) => setAge(itemValue)}>
-                <Picker.Item label="Select age range..." value={null} />
-                <Picker.Item label="Puppy/Kitten" value="young" />
-                <Picker.Item label="Adult" value="adult" />
-
-              </Picker>
-            </View>
-            <View style={styles.dropdownContainer}>
-              <Text style={styles.pickerTitleText}>Location</Text>
-              <Picker
-                selectedValue={location}
-                onValueChange={(itemValue) => setLocation(itemValue)}>
-                <Picker.Item label="Select a location..." value={null} />
-                <Picker.Item label="City A" value="City A" />
-                <Picker.Item label="City B" value="City B" />
-                <Picker.Item label="City C" value="City C" />
-                <Picker.Item label="City D" value="City D" />
-                <Picker.Item label="City E" value="City E" />
-                <Picker.Item label="City F" value="City F" />
-                <Picker.Item label="City Q" value="City Q" />
-              </Picker>
-            </View>
-            <TouchableOpacity
-              style={[styles.button, styles.buttonClose]}
-              onPress={handleSearch}>
-              <Text style={styles.buttonText}>Search</Text>
-            </TouchableOpacity>
+                  </Picker>
+                </View>
+                <View style={styles.dropdownContainer}>
+                  <Text style={styles.pickerTitleText}>Age</Text>
+                  <Picker
+                    selectedValue={age}
+                    onValueChange={(itemValue) => setAge(itemValue)}>
+                    <Picker.Item label="Select age range..." value={null} />
+                    <Picker.Item label="Less than 1 year" value="1" />
+                    <Picker.Item label="1 - 3 years old" value="3" />
+                    <Picker.Item label="4 - 6 years old" value="6" />
+                    <Picker.Item label="7 - 10 years old" value="10" />
+                    <Picker.Item label="at least 10 years old" value=">10" />
+                  </Picker>
+                </View>
+                <View style={styles.dropdownContainer}>
+                  <Text style={styles.pickerTitleText}>Location</Text>
+                  <Picker
+                    selectedValue={location}
+                    onValueChange={(itemValue) => setLocation(itemValue)}>
+                    <Picker.Item label="Select a location..." value={null} />
+                    <Picker.Item label="City A" value="City A" />
+                    <Picker.Item label="City B" value="City B" />
+                    <Picker.Item label="City C" value="City C" />
+                    <Picker.Item label="City D" value="City D" />
+                    <Picker.Item label="City E" value="City E" />
+                    <Picker.Item label="City F" value="City F" />
+                    <Picker.Item label="City Q" value="City Q" />
+                  </Picker>
+                </View>
+                <TouchableOpacity
+                  style={[styles.button]}
+                  onPress={handleSearch}>
+                  <Text style={styles.buttonText}>Search</Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableWithoutFeedback>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
       </Modal>
     </GestureRecognizer>
   );
@@ -130,7 +136,9 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     width: '100%',
     height: '70%',
-    borderRadius: windowHeight * 0.05,
+    Top: '10%',
+    borderTopLeftRadius: windowHeight * 0.05,
+    borderTopRightRadius: windowHeight * 0.05,
     padding: windowWidth * 0.07,
     alignItems: "center",
     shadowColor: "#000",
@@ -164,7 +172,7 @@ const styles = StyleSheet.create({
     marginBottom: '15%',
   },
   dropdownContainer: {
-    marginBottom: 20,
+    marginBottom: '3%',
     alignSelf: 'stretch',
   },
   header: {
@@ -193,6 +201,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: windowWidth * 0.04,
+    marginTop: '5%',
     borderRadius: windowWidth * 0.1,
   },
   filterButton: {

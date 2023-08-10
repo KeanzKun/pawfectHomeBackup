@@ -4,7 +4,7 @@ import { Color, FontFamily } from "../GlobalStyles";
 import { Header } from '@react-navigation/elements';
 import { useNavigation } from '@react-navigation/native';
 import { FloatingAction } from "react-native-floating-action";
-import { fetchUserDetails, returnToken } from '../components/UserService';
+import { fetchUserDetails} from '../components/UserService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import TextStroke from '../components/TextStroke';
 import { SERVER_ADDRESS } from '../config'; 

@@ -2,7 +2,7 @@ from flask import Flask, jsonify, send_from_directory, request
 from models import db, Vet, User, Pets, Listing, ReportListing, Pet_Owner
 from werkzeug.security import check_password_hash, generate_password_hash
 import jwt
-from datetime import datetime
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://us3r:1234@localhost/pawfecthome'
@@ -160,10 +160,39 @@ def check_email():
     user = User.query.filter_by(user_email=email).first()
     return jsonify(exists=bool(user)), 200
 
-@app.route('/api/users', methods=['GET'])
-def get_users():
-    users = User.query.all()
-    return jsonify([user.to_dict() for user in users]), 200
+
+@app.route('/api/users/<int:user_id>', methods=['DELETE'])
+def delete_user(user_id):
+    # Fetch user by ID
+    user = User.query.get_or_404(user_id)
+
+    # Delete Listings
+    listings = Listing.query.filter_by(userID=user_id).all()
+    for listing in listings:
+        db.session.delete(listing)
+
+    # Delete Pet Ownerships
+    pet_owners = Pet_Owner.query.filter_by(userID=user_id).all()
+    for pet_owner in pet_owners:
+        db.session.delete(pet_owner)
+
+    # Identify pets to delete
+    pet_ids_to_delete = [pet_owner.petID for pet_owner in pet_owners]
+
+    # Delete Pets
+    for pet_id in pet_ids_to_delete:
+        pet = Pets.query.get(pet_id)
+        if pet:
+            db.session.delete(pet)
+
+    # Finally, delete the User
+    db.session.delete(user)
+
+    # Commit changes to the database
+    db.session.commit()
+
+    return jsonify({'message': 'User and related records deleted successfully'}), 200
+
 
 @app.route('/api/pets', methods=['GET'])
 def get_pets():
@@ -202,21 +231,35 @@ def search_listings():
     age = request.args.get('age')
     location = request.args.get('location')
 
-    # Start with a query of Listings joined to Pets
     query = db.session.query(Listing, Pets).join(Pets, Listing.petID == Pets.petID)
     query = query.filter(Listing.listing_status == 'active', Listing.listing_type != 'missing')
 
-    # Apply filters
     if pet_type:
         query = query.filter(Pets.pet_type == pet_type)
     if status:
         query = query.filter(Listing.listing_type == status)
     if location:
         query = query.filter(Listing.listing_location == location)
-    # Additional filters as needed...
 
     # Execute the query
     results = query.all()
+
+    # Filter results based on age
+    if age:
+        filtered_results = []
+        for listing, pet in results:
+            pet_age = get_years_from_date(str(pet.pet_age))
+            if age == '1' and pet_age < 1:
+                filtered_results.append((listing, pet))
+            elif age == '3' and 1 <= pet_age <= 3:
+                filtered_results.append((listing, pet))
+            elif age == '6' and 4 <= pet_age <= 6:
+                filtered_results.append((listing, pet))
+            elif age == '10' and 7 <= pet_age <= 10:
+                filtered_results.append((listing, pet))
+            elif age == '>10' and pet_age > 10:
+                filtered_results.append((listing, pet))
+        results = filtered_results
 
     # Convert results to desired format
     response_data = []
@@ -228,6 +271,14 @@ def search_listings():
 
     return jsonify(response_data), 200
 
+def get_years_from_date(date_of_birth):
+    today = datetime.now()
+    birth_date = datetime.strptime(date_of_birth.split(' ')[0], '%Y-%m-%d')
+    years = today.year - birth_date.year
+    months = today.month - birth_date.month
+    if months < 0 or (months == 0 and today.day < birth_date.day):
+        years -= 1
+    return years
 
 
 @app.route('/api/listings/active', methods=['GET'])
@@ -271,8 +322,6 @@ def get_history_listings():
             'pet': pet.to_dict(),
         })
     return jsonify(result), 200
-
-from werkzeug.security import generate_password_hash
 
 @app.route('/api/change-password', methods=['POST'])
 def change_password():
@@ -337,7 +386,7 @@ def home():
     return 'Server is working!', 200
 
 
-# if __name__ == '__main__':
-#     app.run(debug=True)
 if __name__ == '__main__':
-    app.run(host='192.168.0.127', debug=True)
+    app.run(debug=True)
+# if __name__ == '__main__':
+#     app.run(host='192.168.0.127', debug=True)

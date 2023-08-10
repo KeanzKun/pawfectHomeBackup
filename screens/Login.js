@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Modal, Text, StyleSheet, Pressable, TouchableOpacity, View, ScrollView, TouchableHighlight, Dimensions } from "react-native";
+import React, { useState, useEffect } from "react";
+import { BackHandler, Modal, Text, StyleSheet, Pressable, TouchableOpacity, View, ScrollView, TouchableHighlight, Dimensions } from "react-native";
 import { Button, Input } from "@rneui/themed";
 import { useNavigation } from "@react-navigation/native";
 import { Color, FontFamily } from "../GlobalStyles";
@@ -17,6 +17,22 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
+
+  useEffect(() => {
+    // Handle the back button press event
+    const handleBackPress = () => {
+      BackHandler.exitApp(); // Exit the app
+      return true; // Prevent default behavior
+    };
+
+    // Add the event listener
+    BackHandler.addEventListener('hardwareBackPress', handleBackPress);
+
+    // Return a cleanup function to remove the event listener
+    return () => {
+      BackHandler.removeEventListener('hardwareBackPress', handleBackPress);
+    };
+  }, []);
 
   // Function to handle login
   const handleLogin = async () => {
