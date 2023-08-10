@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Dimensions, StyleSheet, ScrollView, Image, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Alert, Linking, View, Text, TouchableOpacity, Dimensions, StyleSheet, ScrollView, Image, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome'; // Assuming you are using FontAwesome for icons
 import { Color, FontFamily } from "../GlobalStyles";
 import { useNavigation } from '@react-navigation/native';
+
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -28,7 +29,8 @@ const PetDetails = ({ route }) => {
     const [description, setDescription] = useState("");
     const [isFullDescriptionShown, setIsFullDescriptionShown] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
-    
+    const [userDetails, setUserDetails] = useState(null);
+    const [userContact, setUserContact] = useState(null);
     useEffect(() => {
         const fetchPetDetails = async () => {
             try {
@@ -49,6 +51,77 @@ const PetDetails = ({ route }) => {
 
         fetchPetDetails();
     }, []);
+    
+    useEffect(() => {
+        if (petDetails) {
+          getUserContacts();
+        }
+      }, [petDetails, getUserContacts]);
+      
+      const getUserContacts = useCallback(async () => {
+        try {
+          const userID = petDetails.listing.userID;
+          const response = await fetch(`${SERVER_ADDRESS}/api/user/${userID}`);
+          const json = await response.json();
+          setUserContact(json); // Modify this line to match the structure of your response
+        } catch (error) {
+          console.error(error);
+        }
+      }, [petDetails]);
+      
+    const directWhatsapp = async () => {
+
+        const whatsappNumber = userContact.contact_number.slice(3);
+
+        try {
+          const url = `https://wa.me/${whatsappNumber}`;
+          await Linking.openURL(url);
+        } catch (error) {
+          // Handle the error as needed, such as logging it or displaying an alert
+          console.error('An error occurred:', error);
+          Alert.alert('Error', 'Unable to open the URL');
+        }
+      };
+
+      const directEmail = async () => {
+        const email = userContact.user_email;
+
+        try {
+          const query = encodeURIComponent(email);
+          const url = `mailto:${query}`;
+          await Linking.openURL(url);
+        } catch (error) {
+          // Handle the error as needed, such as logging it or displaying an alert
+          console.error('An error occurred:', error);
+          Alert.alert('Error', 'Unable to open the URL');
+        }
+      };
+
+      const directCall = async () => {
+        const phoneNumber = userContact.contact_number
+        
+        try {
+          const url = `tel:${phoneNumber}`;
+          await Linking.openURL(url);
+        } catch (error) {
+          // Handle the error as needed, such as logging it or displaying an alert
+          console.error('An error occurred:', error);
+          Alert.alert('Error', 'Unable to open the URL');
+        }
+      };
+
+      const directSMS = async () => {
+        const phoneNumber = userContact.contact_number
+
+        try {
+          const url = `sms:${phoneNumber}`;
+          await Linking.openURL(url);
+        } catch (error) {
+          // Handle the error as needed, such as logging it or displaying an alert
+          console.error('An error occurred:', error);
+          Alert.alert('Error', 'Unable to open the URL');
+        }
+      };
 
     const toggleDescription = () => {
         if (!petDetails) return;
@@ -69,7 +142,7 @@ const PetDetails = ({ route }) => {
             </View>
         );
     } else { // Once data is available, render your component with actual data
-        const imageUrl = `http://10.0.2.2:5000/api/pets/pet_image/${petDetails.pet.pet_photo}`;
+        const imageUrl = `${SERVER_ADDRESS}/api/pets/pet_image/${petDetails.pet.pet_photo}`;
         const { petAge } = route.params;
         const formattedDate = formatDate(petDetails.listing.listing_date);
         const gender = 'gender-' + petDetails.pet.pet_gender;
@@ -134,16 +207,31 @@ const PetDetails = ({ route }) => {
                     <View style={styles.contactContainer}>
                         <Text style={[styles.title, { fontSize: 28 }]}>Contact The Owner</Text>
                         <View style={styles.contactButtons}>
-                            <TouchableOpacity style={styles.contactButton}>
+                            <TouchableOpacity style={styles.contactButton}
+                                onPress={() => {
+                                    directWhatsapp()
+                                }}
+                            >
                                 <MaterialCommunityIcons name="whatsapp" color='#900' size={30} />
                             </TouchableOpacity>
-                            <TouchableOpacity style={styles.contactButton}>
+                            <TouchableOpacity style={styles.contactButton}
+                                onPress={() => {
+                                    directEmail();
+                                }}
+                            >
                                 <MaterialCommunityIcons name="email-outline" color='#900' size={30} />
                             </TouchableOpacity>
-                            <TouchableOpacity style={styles.contactButton}>
+                            <TouchableOpacity style={styles.contactButton}
+                                onPress={() => {
+                                    directCall();
+                                }}
+                            >
                                 <MaterialCommunityIcons name="phone" color='#900' size={30} />
                             </TouchableOpacity>
-                            <TouchableOpacity style={styles.contactButton}>
+                            <TouchableOpacity style={styles.contactButton}
+                                onPress={() => {
+                                    directSMS();
+                                }}>
                                 <MaterialCommunityIcons name="message-outline" color='#900' size={30} />
                             </TouchableOpacity>
                         </View>

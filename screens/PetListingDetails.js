@@ -123,7 +123,7 @@ const PetListingDetails = ({ route }) => {
             </View>
         );
     } else { // Once data is available, render your component with actual data
-        const imageUrl = `http://10.0.2.2:5000/api/pets/pet_image/${petDetails.pet.pet_photo}`;
+        const imageUrl = `${SERVER_ADDRESS}/api/pets/pet_image/${petDetails.pet.pet_photo}`;
         const { petAge } = route.params;
         const formattedDate = formatDate(petDetails.listing.listing_date);
         return (

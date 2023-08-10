@@ -129,6 +129,14 @@ def get_vet(vetID):
         return jsonify({'error': 'Vet not found'}), 404
     return jsonify([vet.to_dict()]), 200
 
+@app.route('/api/user/<int:userID>', methods=['GET'])
+def get_user(userID):
+    user = User.query.get(userID)
+    if user is None:
+        return jsonify({'error': 'Vet not found'}), 404
+    return jsonify({"contact_number": user.contact_number, "user_email": user.user_email}), 200
+
+
 @app.route('/api/listings/update-status/<int:listingID>', methods=['PUT'])
 def update_listing_status(listingID):
     listing_status = request.json['listing_status']
@@ -186,6 +194,40 @@ def get_listings():
             'pet': pet.to_dict(),
         })
     return jsonify(result), 200
+
+@app.route('/api/search_listings', methods=['GET'])
+def search_listings():
+    pet_type = request.args.get('petType')
+    status = request.args.get('status')
+    age = request.args.get('age')
+    location = request.args.get('location')
+
+    # Start with a query of Listings joined to Pets
+    query = db.session.query(Listing, Pets).join(Pets, Listing.petID == Pets.petID)
+    query = query.filter(Listing.listing_status == 'active', Listing.listing_type != 'missing')
+
+    # Apply filters
+    if pet_type:
+        query = query.filter(Pets.pet_type == pet_type)
+    if status:
+        query = query.filter(Listing.listing_type == status)
+    if location:
+        query = query.filter(Listing.listing_location == location)
+    # Additional filters as needed...
+
+    # Execute the query
+    results = query.all()
+
+    # Convert results to desired format
+    response_data = []
+    for listing, pet in results:
+        response_data.append({
+            'listing': listing.to_dict(),
+            'pet': pet.to_dict(),
+        })
+
+    return jsonify(response_data), 200
+
 
 
 @app.route('/api/listings/active', methods=['GET'])
@@ -295,5 +337,7 @@ def home():
     return 'Server is working!', 200
 
 
+# if __name__ == '__main__':
+#     app.run(debug=True)
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='192.168.0.127', debug=True)

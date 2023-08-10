@@ -1,9 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, BackHandler ,Text, TextInput, Button, FlatList, Image, Modal, Animated, TouchableOpacity, Pressable, StyleSheet, Dimensions } from 'react-native';
+import { View, BackHandler, Text, TextInput, Button, FlatList, Image, Modal, Animated, TouchableOpacity, Pressable, StyleSheet, Dimensions } from 'react-native';
 import { Color, FontFamily } from "../GlobalStyles";
 import { useNavigation } from '@react-navigation/native';
 import TextStroke from '../components/TextStroke';
-import RNPickerSelect from 'react-native-picker-select';
 import SearchModal from '../components/SearchModal';
 import { SERVER_ADDRESS } from '../config';
 const windowHeight = Dimensions.get("window").height;
@@ -29,20 +28,41 @@ const HomeScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [data, setData] = useState([]);  // Initializing state to hold pet data
   const [refreshing, setRefreshing] = useState(false);
+  const [filters, setFilters] = useState({});
 
+  const handleSearch = (searchFilters) => {
+    setFilters(searchFilters);
+  };
 
   const fetchData = useCallback(async () => {
-    setRefreshing(true);
+    let url;
+    if (Object.values(filters).some(value => value !== null)) {
+      url = `${SERVER_ADDRESS}/api/search_listings?`;
+      const params = [];
+      Object.keys(filters).forEach((key) => {
+        if (filters[key]) {
+          params.push(`${key}=${filters[key]}`);
+        }
+      });
+      url += params.join('&');
+    } else {
+      url = `${SERVER_ADDRESS}/api/listings`; // use the original endpoint if no filters
+    }
     try {
-      const response = await fetch(`${SERVER_ADDRESS}/api/listings`); // Use the new endpoint
+      console.log(url);
+      const response = await fetch(url);
+      console.log('ccc');
       const json = await response.json();
+      console.log('aaa');
       setData(json);
+      console.log('aaa');
     } catch (error) {
       console.error(error);
     } finally {
       setRefreshing(false);
     }
-  }, []);
+  }, [filters]);
+  
 
   useEffect(() => {
     // Handle the back button press event
@@ -87,7 +107,7 @@ const HomeScreen = () => {
   return (
     <View style={styles.container}>
 
-      <SearchModal modalVisible={modalVisible} setModalVisible={setModalVisible} />
+      <SearchModal modalVisible={modalVisible} setModalVisible={setModalVisible} onSearch={handleSearch} />
 
       <Text style={styles.titleText}>Pawfect Home.</Text>
 
