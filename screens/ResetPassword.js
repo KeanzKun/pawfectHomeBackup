@@ -1,13 +1,58 @@
-import React from "react";
-import { Text, StyleSheet, Pressable, View, ScrollView, TouchableHighlight, Dimensions } from "react-native";
+import React, { useState, useEffect } from "react";
+import { Alert, BackHandler, Text, StyleSheet, Pressable, View, ScrollView, TouchableHighlight, Dimensions } from "react-native";
 import { Button, Input } from "@rneui/themed";
 import { useNavigation } from "@react-navigation/native";
 import { Color, FontFamily } from "../GlobalStyles";
-
+import { SERVER_ADDRESS } from "../config";
 const windowHeight = Dimensions.get("window").height;
 
-const ResetPassword = () => {
+const ResetPassword = ({ route }) => {    
     const navigation = useNavigation();
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+
+    const handleResetPassword = () => {
+        // Validate the passwords
+        if (newPassword === '' || confirmPassword === '') {
+            Alert.alert('Error', 'Both password fields must be filled in.');
+            return;
+        }
+        if (newPassword !== confirmPassword) {
+            Alert.alert('Error', 'Passwords do not match.');
+            return;
+        }
+
+        // Make the API call to update the password
+        // Here, you'll need to include the email or user ID
+        const email = route.params.user_email; // Assuming the email is passed from the previous component
+
+        fetch(`${SERVER_ADDRESS}/api/reset-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, newPassword }),
+        })
+            .then((res) => res.json())
+            .then((data) => {
+                    navigation.navigate('PasswordChanged'); // Redirect to login on successful password update
+            })
+            .catch((error) => Alert.alert('Error', error));
+    };
+
+    useEffect(() => {
+        // Handle the back button press event
+        const handleBackPress = () => {
+            navigation.navigate('Login') // Direct to Login
+            return true; // Prevent default behavior
+        };
+
+        // Add the event listener
+        BackHandler.addEventListener('hardwareBackPress', handleBackPress);
+
+        // Return a cleanup function to remove the event listener
+        return () => {
+            BackHandler.removeEventListener('hardwareBackPress', handleBackPress);
+        };
+    }, []);
 
     return (
         <ScrollView>
@@ -18,7 +63,7 @@ const ResetPassword = () => {
 
                     <TouchableHighlight
                         style={styles.backButton}
-                        onPress={() => navigation.goBack()} // Navigate back to the previous screen
+                        onPress={() => navigation.navigate('Login')} // Navigate back to the previous screen
                     >
                         <Text style={styles.backButtonText}>X</Text>
                     </TouchableHighlight>
@@ -31,7 +76,8 @@ const ResetPassword = () => {
                     <View style={styles.inputFieldContainer}>
                         <Text style={styles.inputLabel}>New Password</Text>
                         <Input
-
+                            secureTextEntry={true}
+                            onChangeText={value => setNewPassword(value)}
                             required={true}
                             inputStyle={styles.inputText}
                         />
@@ -40,7 +86,8 @@ const ResetPassword = () => {
                     <View style={styles.inputFieldContainer}>
                         <Text style={styles.inputLabel}>Confirm Password</Text>
                         <Input
-
+                            secureTextEntry={true}
+                            onChangeText={value => setConfirmPassword(value)}
                             required={true}
                             inputStyle={styles.inputText}
                         />
@@ -51,7 +98,7 @@ const ResetPassword = () => {
                 <View style={styles.buttonFrame}>
                     <TouchableHighlight
                         style={styles.button}
-                        onPress={() => navigation.navigate("EmailVerification2")}
+                        onPress={handleResetPassword} // Call the new handler
                         underlayColor={Color.sandybrown}
                     >
                         <Text style={styles.buttonText}>Reset Password</Text>

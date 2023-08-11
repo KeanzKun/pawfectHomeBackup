@@ -1,18 +1,69 @@
-import React from "react";
-import { Text, StyleSheet, Pressable, View, ScrollView, TouchableHighlight, Dimensions } from "react-native";
+import React, { useState } from "react";
+import { ActivityIndicator, Text, StyleSheet, Pressable, View, ScrollView, TouchableHighlight, Dimensions } from "react-native";
 import { Button, Input } from "@rneui/themed";
 import { useNavigation } from "@react-navigation/native";
 import { Color, FontFamily } from "../GlobalStyles";
+import { SERVER_ADDRESS } from "../config";
+import LinearLoadingIndicator from "../components/LinearLoadingIndicator";
 
 const windowHeight = Dimensions.get("window").height;
 
 const ForgotPassword = () => {
     const navigation = useNavigation();
+    const [email, setEmail] = useState('');
+    const [isValidEmail, setIsValidEmail] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleEmailChange = (value) => {
+        setEmail(value);
+        setIsValidEmail(validateEmail(value));
+    };
+
+    const validateEmail = (email) => {
+        // Using a simple regex to validate email format
+        const pattern = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i;
+        return pattern.test(email);
+    };
+
+    const handleSubmit = () => {
+        if (isValidEmail) {
+            setIsLoading(true);
+            // Make API call to check if email exists in the user table
+            fetch(`${SERVER_ADDRESS}/api/check-email`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email }),
+            })
+                .then((res) => res.json())
+                .then((data) => {
+                    console.log(data)
+                    if (data.exists) { // Changed from data.isValid to data.exists
+                        console.log('TEST')
+                        // Call another API to send an email if the email is valid
+                        fetch(`${SERVER_ADDRESS}/api/send-email`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ email }),
+                        })
+                            .then(() => {
+                                // Navigate to the next screen if successful
+                                navigation.navigate("ForgotPassword2", {user_email: email});
+                            })
+                            .catch((err) => console.error(err));
+                    }
+                    else {
+                        navigation.navigate("ForgotPassword2", {user_email: '' });
+                    }
+                })
+                .catch((error) => console.error(error))
+                
+        }
+    };
 
     return (
 
         <ScrollView contentContainerStyle={styles.container}>
-
+        {isLoading && <LinearLoadingIndicator />}
             <View style={styles.screen}>
 
                 <TouchableHighlight
@@ -31,17 +82,23 @@ const ForgotPassword = () => {
                     <Input
                         required={true}
                         placeholder="Email"
-                        leftIcon={{ name: "lock", type: "material-community" }}
+                        leftIcon={{ name: "email", type: "material-community" }}
                         inputStyle={styles.inputField}
+                        onChangeText={handleEmailChange}
+                        value={email}
                     />
+                    {!isValidEmail && <Text style={styles.warningText}>Please enter a valid email</Text>}
                 </View>
+
+
             </View>
 
             <View style={styles.buttonFrame}>
                 <TouchableHighlight
-                    style={styles.button}
-                    onPress={() => navigation.navigate("ForgotPassword2")}
+                    style={[styles.button]}
+                    onPress={handleSubmit}
                     underlayColor={Color.sandybrown}
+                    disabled={!isValidEmail || !email || isLoading}
                 >
                     <Text style={styles.buttonText}>Submit</Text>
                 </TouchableHighlight>
@@ -57,6 +114,10 @@ const styles = StyleSheet.create({
         alignItems: "center",
         height: windowHeight,
     },
+    loadingBar: {
+        height: 3, // You can adjust the height as you like
+        backgroundColor: 'transparent',
+    },
     backButton: {
         marginTop: windowHeight * 0.03,
         width: windowHeight * 0.05,
@@ -64,6 +125,12 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         backgroundColor: '#FF9E5C',
         alignItems: "center",
+    },
+    warningText: {
+        color: Color.sandybrown,
+        marginLeft: windowHeight * 0.015,
+        marginTop: windowHeight * -0.03,
+        marginBottom: windowHeight * 0.0055
     },
     backButtonText: {
         fontSize: 24,
@@ -102,6 +169,7 @@ const styles = StyleSheet.create({
     inputField: {
         color: "#533E41",
         paddingBottom: windowHeight * -0.015,
+        marginTop: '-3%'
     },
     button: {
         borderRadius: 87,

@@ -1,4 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
 
 db = SQLAlchemy()
 
@@ -30,7 +31,6 @@ class User(db.Model):
     user_password = db.Column(db.String(255))
     contact_number = db.Column(db.String(255))
     user_status = db.Column(db.String(50))
-
     def to_dict(self):
         return {
             'userID': self.userID,
@@ -109,7 +109,24 @@ class ReportListing(db.Model):
             'report_description': self.report_description
         }
 
+class UserVerification(db.Model):
+    __tablename__ = 'UserVerification'
 
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.userID'), nullable=False)
+    verification_code = db.Column(db.String(6), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship('User', backref=db.backref('verification', uselist=False))
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'verification_code': self.verification_code,
+            'created_at': self.created_at
+        }
+    
 class Pet_Owner(db.Model):
     __tablename__ = 'Pet_Owner'
     userID = db.Column(db.Integer, db.ForeignKey('user.userID'), primary_key=True)

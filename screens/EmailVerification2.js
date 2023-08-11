@@ -1,5 +1,5 @@
-import React from "react";
-import { Text, StyleSheet, Pressable, View, ScrollView, TouchableHighlight, Dimensions } from "react-native";
+import React, {useEffect} from "react";
+import { BackHandler, Text, StyleSheet, Pressable, View, ScrollView, TouchableHighlight, Dimensions } from "react-native";
 import { Button, Input } from "@rneui/themed";
 import { useNavigation } from "@react-navigation/native";
 import { Color, FontFamily } from "../GlobalStyles";
@@ -8,6 +8,22 @@ const windowHeight = Dimensions.get("window").height;
 
 const EmailVerification2 = () => {
   const navigation = useNavigation();
+
+  useEffect(() => {
+    // Handle the back button press event
+    const handleBackPress = () => {
+      navigation.navigate('Login') // Exit the app
+      return true; // Prevent default behavior
+    };
+
+    // Add the event listener
+    BackHandler.addEventListener('hardwareBackPress', handleBackPress);
+
+    // Return a cleanup function to remove the event listener
+    return () => {
+      BackHandler.removeEventListener('hardwareBackPress', handleBackPress);
+    };
+  }, []);
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -34,9 +50,9 @@ const EmailVerification2 = () => {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: "#f5f5f5",
-    alignItems: "center",    
+    alignItems: "center",
     height: "100%",
-    
+
   },
   login: {
     flex: 1,

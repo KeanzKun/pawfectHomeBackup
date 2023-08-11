@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useEffect} from "react";
 import { Text, StyleSheet, Pressable, View, ScrollView, TouchableHighlight, Dimensions } from "react-native";
 import { Button, Input } from "@rneui/themed";
 import { useNavigation } from "@react-navigation/native";
@@ -8,6 +8,22 @@ const windowHeight = Dimensions.get("window").height;
 
 const PasswordChanged = () => {
   const navigation = useNavigation();
+
+  useEffect(() => {
+    // Handle the back button press event
+    const handleBackPress = () => {
+      navigation.navigate('Login') // Exit the app
+      return true; // Prevent default behavior
+    };
+
+    // Add the event listener
+    BackHandler.addEventListener('hardwareBackPress', handleBackPress);
+
+    // Return a cleanup function to remove the event listener
+    return () => {
+      BackHandler.removeEventListener('hardwareBackPress', handleBackPress);
+    };
+  }, []);
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
