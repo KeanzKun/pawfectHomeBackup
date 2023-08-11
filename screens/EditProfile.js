@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Text, StyleSheet, Pressable, View, ScrollView, TouchableHighlight, Dimensions } from "react-native";
+import {Alert, Text, StyleSheet, Pressable, View, ScrollView, TouchableHighlight, Dimensions } from "react-native";
 import { Button, Input } from "@rneui/themed";
 import { useNavigation } from "@react-navigation/native";
 import { Color, FontFamily } from "../GlobalStyles";
 import AsyncStorage from '@react-native-async-storage/async-storage'; // For accessing token
-import { SERVER_ADDRESS } from '../config'; 
+import { SERVER_ADDRESS } from '../config';
 
 const windowHeight = Dimensions.get("window").height;
 
 const EditProfile = () => {
-
     const navigation = useNavigation();
     const [userDetails, setUserDetails] = useState({
         userName: '',
@@ -17,9 +16,27 @@ const EditProfile = () => {
         contactNumber: ''
     });
 
+    const updateUsername = async () => {
+        const token = await AsyncStorage.getItem('token');
+        fetch(`${SERVER_ADDRESS}/api/update-userName`, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ userName: userDetails.userName }),
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                // Handle response from server
+                Alert.alert('Success', 'Username updated successfully');
+                navigation.navigate("AccountSetting");
+            })
+            .catch((error) => console.error(error));
+    };
+
     const fetchUserDetails = async () => {
         const token = await AsyncStorage.getItem('token'); // Retrieve token
-        console.log('Frontend token:', token); // Print the token
         fetch(`${SERVER_ADDRESS}/api/get-user-details`, {
             method: 'GET',
             headers: {
@@ -63,9 +80,11 @@ const EditProfile = () => {
                     <Input
                         required={true}
                         inputStyle={styles.usernameInput}
-                        value={userDetails.userName} // Value from state
+                        onChangeText={(value) => setUserDetails({ ...userDetails, userName: value })} // Handle change
+                        value={userDetails.userName}
                     />
                 </View>
+
 
                 <View style={styles.usernameFieldContainer}>
                     <Text style={styles.emailLabel}>Email</Text>
@@ -86,18 +105,16 @@ const EditProfile = () => {
                         color={'#8D8D8D'}
                     />
                 </View>
-
-
-                <View style={styles.redirectSignUp}>
+            </View>
+            <View style={styles.redirectSignUp}>
                     <TouchableHighlight
                         style={styles.loginButton}
-                        onPress={() => navigation.navigate("AccountSetting")}
+                        onPress={updateUsername} // Call the update function on press
                         underlayColor={Color.sandybrown}
                     >
                         <Text style={styles.loginButtonText}>Submit</Text>
                     </TouchableHighlight>
                 </View>
-            </View>
         </ScrollView>
     );
 };
@@ -122,7 +139,6 @@ const styles = StyleSheet.create({
         color: Color.dimgray,
         fontWeight: "900",
     },
-
     screen: {
         flex: 1,
         width: "90%",
@@ -157,7 +173,7 @@ const styles = StyleSheet.create({
     loginButton: {
         borderRadius: 87,
         backgroundColor: Color.sandybrown,
-        width: "70%",
+        width: "60%",
         height: windowHeight * 0.09,
         paddingHorizontal: windowHeight * 0.04,
         marginBottom: windowHeight * 0.03, // Add margin bottom

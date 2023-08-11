@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { Text, Modal, StyleSheet, TouchableOpacity, Pressable, View, ScrollView, TouchableHighlight, Dimensions, KeyboardAvoidingView, Platform } from "react-native";
 import { Button, Input } from "@rneui/themed";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { Color, FontFamily } from "../GlobalStyles";
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
-import { SERVER_ADDRESS } from '../config'; 
+import { SERVER_ADDRESS } from '../config';
+import { isDisposable } from '../components/IsDisposable'
+import LinearLoadingIndicator from "../components/LinearLoadingIndicator";
 
 const windowHeight = Dimensions.get("window").height;
 
@@ -22,16 +24,54 @@ const SignUp = () => {
     const [isUsernameValid, setUsernameValid] = useState(true);
     const [modalVisible, setModalVisible] = useState(false);
     const [modalMessage, setModalMessage] = useState('');
+    const [isDisposableDomain, setIsDisposableDomain] = useState(false);
+    const [isContactNumbeExist, setIsContactNumberExist] = useState(false)
+    const [isLoading, setIsLoading] = useState(false)
+    const [emailSent, setEmailSent] = useState(true)
+    const [userID, setUserID] = useState('')
+    const [userStatus, setUserStatus] = useState(null);
 
-    const validateEmail = (email) => {
-        // Regular expression to match the standard email format
+    const resetForm = () => {
+        setUserName('');
+        setUserEmail('');
+        setPassword('');
+        setConfirmPassword('');
+        setContactNumber("+60");
+        setEmailValid(true);
+        setPasswordMatch(true);
+        setEmailExist(false);
+        setContactNumberValid(true);
+        setUsernameValid(true);
+        setModalVisible(false);
+        setModalMessage('');
+        setIsDisposableDomain(false);
+        setIsContactNumberExist(false);
+        setIsLoading(false);
+        setEmailSent(true);
+        setUserID('');
+    };
+
+    useFocusEffect(
+        React.useCallback(() => {
+            resetForm();
+        }, [])
+    );
+
+    const validateEmail = async (email) => {
+        setUserEmail(email)
         const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
         if (emailPattern.test(email)) {
-            setEmailValid(true)
-            handleEmailChange(email)
+            // Check if the email is disposable
+            if (await isDisposable(email)) {
+                setIsDisposableDomain(true)
+                return;
+            }
+            setIsDisposableDomain(false);
+            setEmailValid(true);
+            handleEmailChange(email);
         }
         else {
-            setEmailValid(false)
+            setEmailValid(false);
         }
     };
 
@@ -55,7 +95,7 @@ const SignUp = () => {
         }
 
         // If fields are filled, check validation criteria
-        if (!isEmailValid || !isUsernameValid || !isPasswordMatch || !isContactNumberValid) {
+        if (!isEmailValid || (isEmailExist && (userStatus === 'active' || userStatus === 'banned')) || isContactNumbeExist || !isUsernameValid || !isPasswordMatch || !isContactNumberValid || isDisposableDomain) {
             setModalMessage("Please meet all the input criteria");
             setModalVisible(true);
             return false;
@@ -64,11 +104,53 @@ const SignUp = () => {
         return true; // Return true if all fields are filled and validation criteria are met
     };
 
+    const validateContactNumber = async (text) => {
+        if (text.startsWith("+60")) {
+            setContactNumber(text);
+
+            // Use 'text' instead of 'contactNumber'
+            if (!/^\+601[0-9]{8,9}$/.test(text)) {
+                setContactNumberValid(false)
+                setIsContactNumberExist(false);
+            }
+            else {
+                setContactNumberValid(true)
+                setIsContactNumberExist(false);
+                handleContactNumber(text)
+            }
+        }
+    }
+
+    const handleContactNumber = async (text) => {
+        setContactNumber(text); // This still updates the state, but we don't rely on it for the request
+
+        try {
+            const response = await fetch(`${SERVER_ADDRESS}/api/check-contactNumber`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    contactNumber: text, // Use the text parameter instead of the state variable
+                }),
+            });
+
+            const json = await response.json();
+
+            if (json.exists) {
+                setIsContactNumberExist(true);
+            }
+
+        } catch (error) {
+            console.error("An error occurred while checking the contact number:", error);
+        }
+    };
+
 
 
     const handleEmailChange = async (text) => {
-
         setUserEmail(text);
+        setEmailExist(false);
         // Make a POST request to the API endpoint to check if email already exists
         try {
             const response = await fetch(`${SERVER_ADDRESS}/api/check-email`, {
@@ -80,17 +162,21 @@ const SignUp = () => {
                     email: text.toLowerCase(), // Send email in lowercase
                 }),
             });
-
+    
             const json = await response.json();
-            
-
+    
             if (json.exists) {
                 setEmailExist(true);
+                setUserStatus(json.status); // Set user status from the server response
+            } else {
+                setUserStatus(null); // Clear the user status if the email does not exist
             }
         } catch (error) {
             console.error("An error occurred while checking the email:", error);
         }
     };
+    
+
 
     const checkUsernameValid = (text) => {
         // Only allow alphanumeric characters, underscores, and hyphens
@@ -112,26 +198,85 @@ const SignUp = () => {
         setPasswordMatch(password === text);
     };
 
-    const handleContactNumber = (text) => {
-        if (text.startsWith("+60")) {
-            setContactNumber(text);
+    //Called by handleSignUp, send verification code to user
+    const handleRequestCode = () => {
+        const email = userEmail;
+        setEmailSent(true)
 
-            // Use 'text' instead of 'contactNumber'
-            if (!/^\+601[0-9]{8,9}$/.test(text)) {
-                setContactNumberValid(false)
+        if (userEmail) {
+            setIsLoading(true);
+            fetch(`${SERVER_ADDRESS}/api/send-email`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email }),
+
+            })
+                .then(() => {
+                    setEmailSent(true)
+                }).catch((err) => {
+                    setEmailSent(false)
+
+                    Alert.alert('error', err)
+                    deleteUserRecord();
+                    return;
+                });
+        }
+    }
+
+    //if send email failed, delete the user records
+    const deleteUserRecord = async () => {
+        // First, get the user ID using the provided email
+        try {
+            const response = await fetch(`${SERVER_ADDRESS}/api/registration/getUserID`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: userEmail }), // Make sure to use userEmail state variable
+            });
+            const json = await response.json();
+
+            if (response.ok) {
+                console.log('Get UserID Successfully');
+                // Use the retrieved user ID to delete the user
+                setUserID(json.userID);
+                await deleteUserById(userId);
+            } else {
+                console.error(json.error || 'Error fetching user ID');
+                Alert.alert('Error', json.error || 'Error fetching user ID');
             }
-            else
-                setContactNumberValid(true)
+        } catch (err) {
+            console.error(err);
+            Alert.alert('Error', 'An error occurred while deleting the user record');
         }
     };
 
+    //Called by deleteUserRecord, delete user by userID
+    const deleteUserById = async (userId) => {
+        try {
+            const response = await fetch(`${SERVER_ADDRESS}/api/users/${userId}`, {
+                method: 'DELETE',
+            });
+
+            if (response.ok) {
+                console.log('User and related records deleted successfully');
+            } else {
+                const json = await response.json();
+                console.error(json.message || 'Error deleting user');
+                Alert.alert('Error', json.message || 'Error deleting user');
+            }
+        } catch (err) {
+            console.error(err);
+            Alert.alert('Error', 'An error occurred while deleting the user');
+        }
+    };
+
+    //called when user click signup button
     const handleSignUp = async () => {
         if (!isCriteriaMet()) {
             return;
         }
 
         try {
-            const response = await fetch(`${SERVER_ADDRESS}/api/register`, {
+            const response = await fetch(`${SERVER_ADDRESS}/api/reregister`, { // Changed endpoint to '/api/reregister'
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -147,12 +292,13 @@ const SignUp = () => {
 
             const json = await response.json();
             if (response.status === 200) {
-                setUserName('')
-                setUserEmail('')
-                setPassword('')
-                setConfirmPassword('')
-                setContactNumber('')
-                navigation.navigate('EmailVerification'); // Navigate on successful signup
+                resetForm(); // Resets the state to its initial values
+                handleRequestCode();
+                if (emailSent) {
+                    navigation.navigate('EmailVerification', { user_email: userEmail, userID: userID });
+                } else {
+                    Alert.alert('Error', 'Error, please try again later.');
+                }
             } else {
                 alert(json.message); // Alert the user if the sign-up failed
             }
@@ -160,12 +306,15 @@ const SignUp = () => {
             console.error(error);
         }
     };
+
+
     return (
         <KeyboardAwareScrollView
             style={{ backgroundColor: '#4c69a5' }}
             resetScrollToCoords={{ x: 0, y: 0 }}
             scrollEnabled={true}
         >
+            {isLoading && <LinearLoadingIndicator />}
             <Modal
                 animationType="fade"
                 transparent={true}
@@ -194,6 +343,7 @@ const SignUp = () => {
                     <View style={styles.usernameFieldContainer}>
                         <Text style={styles.emailLabel}>Username</Text>
                         <Input
+                            value={userName}
                             required={true}
                             onChangeText={text => {
                                 checkUsernameValid(text)
@@ -204,15 +354,17 @@ const SignUp = () => {
 
                         <Text style={styles.emailLabel}>Email</Text>
                         <Input
+                            value={userEmail}
                             required={true}
-                            onChangeText={validateEmail} // Call the handleEmailChange function
+                            onChangeText={text => validateEmail(text)} // async call is inside the function
                             inputStyle={styles.usernameInput}
                         />
                         {!isEmailValid && <Text style={styles.warningText}>Please enter a valid email address.</Text>}
-                        {isEmailExist && <Text style={styles.warningText}>Email registered.</Text>}
-
+                        {(isEmailExist && (userStatus === 'active' || userStatus === 'banned')) && <Text style={styles.warningText}>Email registered.</Text>}
+                        {isDisposableDomain && <Text style={styles.warningText}>Disposable email not allowed.</Text>}
                         <Text style={styles.emailLabel}>Password</Text>
                         <Input
+                            value={password}
                             required={true}
                             onChangeText={handlePasswordChange} // Call the handlePasswordChange function
                             inputStyle={styles.usernameInput}
@@ -221,6 +373,7 @@ const SignUp = () => {
 
                         <Text style={styles.emailLabel}>Confirm Password</Text>
                         <Input
+                            value={confirmPassword}
                             required={true}
                             onChangeText={handleConfirmPasswordChange} // Call the handleConfirmPasswordChange function
                             inputStyle={styles.usernameInput}
@@ -233,34 +386,35 @@ const SignUp = () => {
                             required={true}
                             value={contactNumber} // "+60" prefix is already included in the state
                             onChangeText={text => {
-                                handleContactNumber(text)
+                                validateContactNumber(text)
                             }}
                             keyboardType="numeric" // Numeric keyboard
                             inputStyle={styles.usernameInput}
                         />
                         {!isContactNumberValid && <Text style={styles.warningText}>Phone number format should be +60123456789 or +601234567890.</Text>}
+                        {isContactNumbeExist && <Text style={styles.warningText}>Phone number registered.</Text>}
 
                     </View>
 
                     <View style={styles.redirectSignUp}>
-                        <TouchableHighlight
+                        <TouchableOpacity
                             style={styles.loginButton}
                             onPress={handleSignUp} // Call handleSignUp when the sign-up button is pressed
                             underlayColor={Color.sandybrown}
                         >
                             <Text style={styles.loginButtonText}>Sign Up</Text>
-                        </TouchableHighlight>
+                        </TouchableOpacity>
 
                         <Text style={[styles.dontHaveAnText, styles.dontHaveAnTypo]}>
                             Already have an account?
                         </Text>
-                        <TouchableHighlight
+                        <TouchableOpacity
                             style={styles.signUp}
                             onPress={() => navigation.navigate("Login")}
                             underlayColor={Color.transparent}
                         >
                             <Text style={styles.signUpText}>Login</Text>
-                        </TouchableHighlight>
+                        </TouchableOpacity>
                     </View>
                 </View>
             </View>

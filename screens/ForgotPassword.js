@@ -29,7 +29,7 @@ const ForgotPassword = () => {
         if (isValidEmail) {
             setIsLoading(true);
             // Make API call to check if email exists in the user table
-            fetch(`${SERVER_ADDRESS}/api/check-email`, {
+            fetch(`${SERVER_ADDRESS}/api/forgotPassword/check-email`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email }),

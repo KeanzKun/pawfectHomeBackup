@@ -119,13 +119,13 @@ const Login = () => {
           </View>
 
           <View style={styles.forgotPasswordBtnContainer}>
-            <TouchableHighlight
+            <TouchableOpacity
               style={styles.forgotPasswordBtn}
               onPress={() => navigation.navigate("ForgotPassword")}
               underlayColor={Color.transparent}
             >
               <Text>Forgot Password?</Text>
-            </TouchableHighlight>
+            </TouchableOpacity>
           </View>
 
 
@@ -133,13 +133,13 @@ const Login = () => {
 
         <View style={styles.buttonFrame}>
 
-          <TouchableHighlight
+          <TouchableOpacity
             style={styles.loginButton}
             onPress={handleLogin} // Call handleLogin when the login button is pressed
             underlayColor={Color.sandybrown}
           >
             <Text style={styles.loginButtonText}>Login</Text>
-          </TouchableHighlight>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.redirectSignUp}>
@@ -148,13 +148,13 @@ const Login = () => {
             Don't have an account yet?
           </Text>
 
-          <TouchableHighlight
+          <TouchableOpacity
             style={styles.signUp}
             onPress={() => navigation.navigate("SignUp")}
             underlayColor={Color.transparent}
           >
             <Text style={styles.signUpText}>Sign up</Text>
-          </TouchableHighlight>
+          </TouchableOpacity>
 
         </View>
 

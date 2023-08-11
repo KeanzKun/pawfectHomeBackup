@@ -12,30 +12,88 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://us3r:1234@localhost/paw
 db.init_app(app)
 
 
-app.config['MAIL_SERVER'] = 'smtp-mail.outlook.com'
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USERNAME'] = 'pawfectHome@hotmail.com'
-app.config['MAIL_PASSWORD'] = 'pawfectFYP123.'
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USE_SSL'] = False
+#app.config['MAIL_SERVER'] = 'smtp-mail.outlook.com'
+# app.config['MAIL_PORT'] = 587
+# app.config['MAIL_USERNAME'] = 'pawfectHome@hotmail.com'
+# app.config['MAIL_PASSWORD'] = 'pawfectFYP123.'
+# app.config['MAIL_USE_TLS'] = True
+# app.config['MAIL_USE_SSL'] = False
+
+app.config['MAIL_SERVER'] = 'imap.gmail.com'
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USERNAME'] = 'kemonomimikawaiides@gmail.com'
+app.config['MAIL_PASSWORD'] = 'Iamkeanfong<3.'
+app.config['MAIL_USE_TLS'] = False
+app.config['MAIL_USE_SSL'] = True
 
 mail = Mail(app)
 
 
-@app.route('/api/check-email', methods=['POST'])
+@app.route('/api/forgotPassword/check-email', methods=['POST'])
 def check_email():
     data = request.get_json()
     email = data.get('email').lower() # Get email and convert to lowercase
     user = User.query.filter_by(user_email=email).first()
     return jsonify(exists=bool(user)), 200
 
-from datetime import datetime
+@app.route('/api/check-email', methods=['POST'])
+def forgotPassword_check_email():
+    data = request.get_json()
+    email = data.get('email').lower() # Get email and convert to lowercase
+    user = User.query.filter_by(user_email=email).first()
+    if user:
+        return jsonify(exists=True, status=user.user_status), 200
+    else:
+        return jsonify(exists=False), 200
+
+@app.route('/api/reregister', methods=['POST'])
+def reregister():
+    # Get the required information from the request body
+    user_name = request.json['user_name']
+    user_email = request.json['user_email']
+    user_password = request.json['user_password']
+    contact_number = request.json['contact_number']
+    user_status = 'unverified'
+
+    # Check if the email is already registered with status 'unverified'
+    existing_user = User.query.filter_by(user_email=user_email, user_status='unverified').first()
+    if existing_user:
+        # Delete the existing user
+        db.session.delete(existing_user)
+        # Delete related records like verification code, listings, etc.
+        #...
+
+    # Create the User object
+    new_user = User(
+        user_name=user_name,
+        user_email=user_email,
+        user_password=user_password,
+        contact_number=contact_number,
+        user_status=user_status
+    )
+
+    # Add the new user to the database
+    db.session.add(new_user)
+    db.session.commit()
+
+    return jsonify({'message': 'User re-registered successfully'}), 200
+
+
+@app.route('/api/check-contactNumber', methods=['POST'])
+def check_contactNumber():
+    data = request.get_json()
+    contactNumber = data.get('contactNumber') # Get contact number
+    user = User.query.filter_by(contact_number = contactNumber).first()
+    print(user)
+    return jsonify(exists=bool(user)), 200
+
 
 @app.route('/api/send-email', methods=['POST'])
 def send_email():
     data = request.get_json()
     email = data.get('email')
-
+    
+    print(email)
     # Generate a random 6-digit code
     code = ''.join([str(random.randint(0, 9)) for _ in range(6)])
 
@@ -108,6 +166,22 @@ def delete_verification_code():
 
     return jsonify({'message': 'Email not found'}), 404
 
+@app.route('/api/registration/getUserID', methods=['POST'])
+def get_userID():
+    data = request.get_json()
+    email = data.get('email')
+    print('email ::', email)
+
+    user = User.query.filter_by(user_email=email).first()
+    print('USER  ', user.userID)
+    
+
+    if user:
+        return jsonify({'userID': user.userID}), 200
+    else:
+        return jsonify({'error': 'User not found'}), 404
+
+
 # Login Route
 @app.route('/api/login', methods=['POST'])
 def login():
@@ -128,6 +202,7 @@ def login():
 @app.route('/api/get-user-details', methods=['GET'])
 def get_user_details():
     user_id = get_user_id()
+
     user = User.query.filter(User.userID == user_id).first()
     if user:
         return jsonify({'user': user.to_dict()}), 200
@@ -186,7 +261,7 @@ def get_vet(vetID):
 def get_user(userID):
     user = User.query.get(userID)
     if user is None:
-        return jsonify({'error': 'Vet not found'}), 404
+        return jsonify({'error': 'User not found'}), 404
     return jsonify({"contact_number": user.contact_number, "user_email": user.user_email}), 200
 
 
@@ -206,9 +281,45 @@ def update_listing_status(listingID):
     else:
         return jsonify({'message': 'Listing not found'}), 404
     
+@app.route('/api/update-userName', methods=['POST'])
+def update_user():
+    user_data = request.json
+    user_name = user_data.get('userName', None)
 
+    user_id = get_user_id()
+    
+    if not user_id:
+        return jsonify(message="User not authenticated"), 401
 
+    user = User.query.filter(User.userID == user_id).first()
 
+    # Update the username in your database if provided
+    if user_name and user:
+        user.user_name  = user_name
+
+        db.session.commit()
+        return jsonify(message="User details updated successfully"), 200
+    else:
+        return jsonify(message="Error updating user details"), 400
+
+@app.route('/api/update-user_status', methods=['POST'])
+def update_status():
+    data = request.get_json()
+    user_id = data.get('user_ID')
+    user_status = data.get('userStatus')
+
+    user = User.query.filter(User.userID == user_id).first()
+    print('USER  ', user)
+    # Update the username in your database if provided
+    if user:
+        user.user_status = user_status
+        
+        print('STATUS  ' , user.user_status)
+        db.session.commit()
+        return jsonify(message="User status updated successfully"), 200
+    else:
+        return jsonify(message="Error updating user status"), 400
+    
 @app.route('/api/users/<int:user_id>', methods=['DELETE'])
 def delete_user(user_id):
     # Fetch user by ID
@@ -449,10 +560,10 @@ def home():
     return 'Server is working!', 200
 
 
-if __name__ == '__main__':
-    app.run(debug=True)
 # if __name__ == '__main__':
-#     app.run(host='192.168.0.127', debug=True)
+#     app.run(debug=True)
+if __name__ == '__main__':
+    app.run(host='192.168.0.127', debug=True)
 
 # @app.route('/api/login', methods=['POST'])
 # def login():
