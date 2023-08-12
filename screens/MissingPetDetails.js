@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Linking, Alert, ScrollView, View, Text, ActivityIndicator, Image, StyleSheet, TouchableOpacity, Dimensions } from "react-native";
+import { BackHandler, Linking, Alert, ScrollView, View, Text, ActivityIndicator, Image, StyleSheet, TouchableOpacity, Dimensions } from "react-native";
 import Icon from 'react-native-vector-icons/FontAwesome'; // Assuming you are using FontAwesome for icons
 import { Color, FontFamily } from "../GlobalStyles";
 import { useNavigation } from '@react-navigation/native';
@@ -51,6 +51,22 @@ const MissingPetDetails = ({ route }) => {
 
         fetchPetDetails();
     }, []);
+
+    useEffect(() => {
+        // Handle the back button press event
+        const handleBackPress = () => {
+          navigation.goBack(); // Exit the app
+          return true; // Prevent default behavior
+        };
+    
+        // Add the event listener
+        BackHandler.addEventListener('hardwareBackPress', handleBackPress);
+    
+        // Return a cleanup function to remove the event listener
+        return () => {
+          BackHandler.removeEventListener('hardwareBackPress', handleBackPress);
+        };
+      }, []);
 
     useEffect(() => {
         if (petDetails) {

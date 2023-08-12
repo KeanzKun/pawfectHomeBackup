@@ -160,9 +160,6 @@ const EmailVerification = ({ route }) => {
         }
     }
 
-
-
-
     useEffect(() => {
         // Add the event listener
         BackHandler.addEventListener('hardwareBackPress', handleBackPress);

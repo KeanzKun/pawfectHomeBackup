@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import {Alert, Text, StyleSheet, Pressable, View, ScrollView, TouchableHighlight, Dimensions } from "react-native";
+import {BackHandler, Alert, Text, StyleSheet, Pressable, View, ScrollView, TouchableHighlight, Dimensions } from "react-native";
 import { Button, Input } from "@rneui/themed";
 import { useNavigation } from "@react-navigation/native";
 import { Color, FontFamily } from "../GlobalStyles";
@@ -15,6 +15,22 @@ const EditProfile = () => {
         userEmail: '',
         contactNumber: ''
     });
+
+    useEffect(() => {
+        // Handle the back button press event
+        const handleBackPress = () => {
+          navigation.goBack(); // Exit the app
+          return true; // Prevent default behavior
+        };
+    
+        // Add the event listener
+        BackHandler.addEventListener('hardwareBackPress', handleBackPress);
+    
+        // Return a cleanup function to remove the event listener
+        return () => {
+          BackHandler.removeEventListener('hardwareBackPress', handleBackPress);
+        };
+      }, []);
 
     const updateUsername = async () => {
         const token = await AsyncStorage.getItem('token');

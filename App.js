@@ -36,11 +36,12 @@ import PasswordChanged from "./screens/PasswordChanged";
 import DeleteAccount from "./screens/DeleteAccount";
 import DeleteAccount2 from "./screens/DeleteAccount2";
 import DeleteAccount3 from "./screens/DeleteAccount3";
+import { Color, FontFamily } from './GlobalStyles'
 
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const Stack = createNativeStackNavigator();
-const Tab = createBottomTabNavigator();
+const Tab = createMaterialTopTabNavigator();
 const TopTab = createMaterialTopTabNavigator(); // New declaration
 
 const windowHeight = Dimensions.get("window").height;
@@ -63,46 +64,55 @@ const TopTabNavigator = () => {
     </TopTab.Navigator>);
 }
 
+
 const BottomTabNavigator = () => {
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
-
-        headerShown: false,
+      tabBarPosition='bottom'
+      screenOptions={{
         tabBarActiveTintColor: '#FF9E5C',
         tabBarInactiveTintColor: 'white',
-        //Tab bar styles can be added here
-        tabBarStyle: {
-          paddingVertical: 5, borderTopLeftRadius: 30,
-          borderTopRightRadius: 30, backgroundColor: '#533E41', height: windowHeight * 0.08
+        tabBarShowLabel: true,
+        tabBarLabelStyle: {
+          fontSize: windowHeight * 0.016,
+          textTransform: 'none', // Add this line to avoid uppercase text
         },
-        tabBarLabelStyle: { paddingBottom: windowHeight * 0.01, fontSize: windowHeight * 0.016 },
-      })}
+        tabBarIndicatorStyle: {
+          height: 0,
+        },
+        tabBarPressColor: 'transparent',
+        tabBarStyle: {
+          marginBottom: '-1%',
+          borderTopLeftRadius: 30,
+          borderTopRightRadius: 30,
+          backgroundColor: '#533E41',
+        }
+      }}
     >
+      
       <Tab.Screen
         name="HomeScreen"
         component={HomeScreen}
         options={{
           tabBarLabel: 'Home',
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="paw" color={color} size={size} />
+            <MaterialCommunityIcons name="paw" color={color} size={windowHeight * 0.03} />
           ),
         }}
       />
       <Tab.Screen name="VetScreen" component={VetScreen} options={{
         tabBarLabel: 'Vet', tabBarIcon: ({ color, size }) => (
-          <MaterialCommunityIcons name="hospital-marker" color={color} size={size} />
+          <MaterialCommunityIcons name="hospital-marker" color={color} size={windowHeight * 0.03} />
         ),
-      }
-      } />
+      }} />
       <Tab.Screen name="MissingPet" component={MissingPetScreen} options={{
         tabBarLabel: 'Missing Pet', tabBarIcon: ({ color, size }) => (
-          <MaterialCommunityIcons name="crosshairs-question" color={color} size={size} />
+          <MaterialCommunityIcons name="crosshairs-question" color={color} size={windowHeight * 0.03} />
         ),
       }} />
       <Tab.Screen name="AccountSetting" component={AccountSetting} options={{
         tabBarLabel: 'Account', tabBarIcon: ({ color, size }) => (
-          <MaterialCommunityIcons name="account-circle" color={color} size={size} />
+          <MaterialCommunityIcons name="account-circle" color={color} size={windowHeight * 0.03} />
         ),
       }} />
     </Tab.Navigator>
@@ -137,7 +147,7 @@ const App = () => {
         <Stack.Screen name="DeleteAccount" component={DeleteAccount} />
         <Stack.Screen name="DeleteAccount2" component={DeleteAccount2} />
         <Stack.Screen name="DeleteAccount3" component={DeleteAccount3} />
-        
+
         <Stack.Screen name="Main" component={BottomTabNavigator} />
         <Stack.Screen name="Top" component={TopTabNavigator} options={{
           headerShown: true,

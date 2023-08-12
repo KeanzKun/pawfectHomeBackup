@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Alert, Linking, ScrollView, View, Text, Image, StyleSheet, ActivityIndicator, TouchableOpacity, Dimensions } from "react-native";
+import { BackHandler, Alert, Linking, ScrollView, View, Text, Image, StyleSheet, ActivityIndicator, TouchableOpacity, Dimensions } from "react-native";
 import Icon from 'react-native-vector-icons/FontAwesome'; // Assuming you are using FontAwesome for icons
 import { Color, FontFamily } from "../GlobalStyles";
 import { useNavigation } from '@react-navigation/native';
@@ -27,6 +27,22 @@ const VetDetails = ({ route }) => {
           Alert.alert('Error', 'Unable to open the URL');
         }
       };
+
+      useEffect(() => {
+        // Handle the back button press event
+        const handleBackPress = () => {
+          navigation.goBack(); // Exit the app
+          return true; // Prevent default behavior
+        };
+    
+        // Add the event listener
+        BackHandler.addEventListener('hardwareBackPress', handleBackPress);
+    
+        // Return a cleanup function to remove the event listener
+        return () => {
+          BackHandler.removeEventListener('hardwareBackPress', handleBackPress);
+        };
+      }, []);
 
 
     useEffect(() => {

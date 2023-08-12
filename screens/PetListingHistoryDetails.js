@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Dimensions, StyleSheet, ScrollView, Image, ActivityIndicator } from 'react-native';
+import { BackHandler, View, Text, TouchableOpacity, Dimensions, StyleSheet, ScrollView, Image, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome'; // Assuming you are using FontAwesome for icons
 import { Color, FontFamily } from "../GlobalStyles";
 import { useNavigation } from '@react-navigation/native';
@@ -34,6 +34,22 @@ const PetListingHistoryDetails = ({ route }) => {
     const [description, setDescription] = useState("");
     const [isFullDescriptionShown, setIsFullDescriptionShown] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        // Handle the back button press event
+        const handleBackPress = () => {
+          navigation.goBack(); // Exit the app
+          return true; // Prevent default behavior
+        };
+    
+        // Add the event listener
+        BackHandler.addEventListener('hardwareBackPress', handleBackPress);
+    
+        // Return a cleanup function to remove the event listener
+        return () => {
+          BackHandler.removeEventListener('hardwareBackPress', handleBackPress);
+        };
+      }, []);
 
     useEffect(() => {
         const fetchPetDetails = async () => {
