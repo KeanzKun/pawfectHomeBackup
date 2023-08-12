@@ -33,6 +33,7 @@ const HomeScreen = () => {
 
   const handleSearch = (searchFilters) => {
     setFilters(searchFilters);
+    setSelectedType(null); // Reset the selected type
   };
 
   const handleTypePress = (type) => {

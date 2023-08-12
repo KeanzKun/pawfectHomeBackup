@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import {BackHandler, Alert, Linking, View, Text, TouchableOpacity, Dimensions, StyleSheet, ScrollView, Image, ActivityIndicator } from 'react-native';
+import { Modal, BackHandler, Alert, Linking, View, Text, TouchableOpacity, Dimensions, StyleSheet, ScrollView, Image, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome'; // Assuming you are using FontAwesome for icons
 import { Color, FontFamily } from "../GlobalStyles";
 import { useNavigation } from '@react-navigation/native';
-
+import ReportListingModal from '../components/ReportListingModal';
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { SERVER_ADDRESS } from '../config'; 
+import { SERVER_ADDRESS } from '../config';
 
 function formatDate(dateString) {
     const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN",
@@ -30,22 +30,57 @@ const PetDetails = ({ route }) => {
     const [isFullDescriptionShown, setIsFullDescriptionShown] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [userContact, setUserContact] = useState(null);
-    
+    const [modalVisible, setModalVisible] = useState(false);
+
+    const handleReportListing = () => {
+        setModalVisible(true);
+    };
+
+    const submitReport = async (reportData) => {
+        try {
+            const response = await fetch(`${SERVER_ADDRESS}/api/report`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    userID: petDetails.user.userID,
+                    listingID: route.params.listingID,
+                    report_type: reportData.reportReason,
+                    report_description: reportData.description,
+                }),
+            });
+
+            const result = await response.json();
+
+            if (response.status === 201) {
+                Alert.alert('Success!', 'Report submitted successfully!');
+            } else {
+                alert('Failed to submit the report. ' + result.error);
+            }
+        } catch (error) {
+            console.error(error);
+            alert('An error occurred while submitting the report. Please try again later.');
+        }
+    };
+
+
+
     useEffect(() => {
         // Handle the back button press event
         const handleBackPress = () => {
-          navigation.goBack(); // Exit the app
-          return true; // Prevent default behavior
+            navigation.goBack(); // Exit the app
+            return true; // Prevent default behavior
         };
-    
+
         // Add the event listener
         BackHandler.addEventListener('hardwareBackPress', handleBackPress);
-    
+
         // Return a cleanup function to remove the event listener
         return () => {
-          BackHandler.removeEventListener('hardwareBackPress', handleBackPress);
+            BackHandler.removeEventListener('hardwareBackPress', handleBackPress);
         };
-      }, []);
+    }, []);
 
     useEffect(() => {
         const fetchPetDetails = async () => {
@@ -67,77 +102,77 @@ const PetDetails = ({ route }) => {
 
         fetchPetDetails();
     }, []);
-    
+
     useEffect(() => {
         if (petDetails) {
-          getUserContacts();
+            getUserContacts();
         }
-      }, [petDetails, getUserContacts]);
-      
-      const getUserContacts = useCallback(async () => {
+    }, [petDetails, getUserContacts]);
+
+    const getUserContacts = useCallback(async () => {
         try {
-          const userID = petDetails.listing.userID;
-          const response = await fetch(`${SERVER_ADDRESS}/api/user/${userID}`);
-          const json = await response.json();
-          setUserContact(json); // Modify this line to match the structure of your response
+            const userID = petDetails.listing.userID;
+            const response = await fetch(`${SERVER_ADDRESS}/api/user/${userID}`);
+            const json = await response.json();
+            setUserContact(json); // Modify this line to match the structure of your response
         } catch (error) {
-          console.error(error);
+            console.error(error);
         }
-      }, [petDetails]);
-      
+    }, [petDetails]);
+
     const directWhatsapp = async () => {
 
         const whatsappNumber = userContact.contact_number.slice(3);
 
         try {
-          const url = `https://wa.me/${whatsappNumber}`;
-          await Linking.openURL(url);
+            const url = `https://wa.me/${whatsappNumber}`;
+            await Linking.openURL(url);
         } catch (error) {
-          // Handle the error as needed, such as logging it or displaying an alert
-          console.error('An error occurred:', error);
-          Alert.alert('Error', 'Unable to open the URL');
+            // Handle the error as needed, such as logging it or displaying an alert
+            console.error('An error occurred:', error);
+            Alert.alert('Error', 'Unable to open the URL');
         }
-      };
+    };
 
-      const directEmail = async () => {
+    const directEmail = async () => {
         const email = userContact.user_email;
 
         try {
-          const query = encodeURIComponent(email);
-          const url = `mailto:${query}`;
-          await Linking.openURL(url);
+            const query = encodeURIComponent(email);
+            const url = `mailto:${query}`;
+            await Linking.openURL(url);
         } catch (error) {
-          // Handle the error as needed, such as logging it or displaying an alert
-          console.error('An error occurred:', error);
-          Alert.alert('Error', 'Unable to open the URL');
+            // Handle the error as needed, such as logging it or displaying an alert
+            console.error('An error occurred:', error);
+            Alert.alert('Error', 'Unable to open the URL');
         }
-      };
+    };
 
-      const directCall = async () => {
-        const phoneNumber = userContact.contact_number
-        
-        try {
-          const url = `tel:${phoneNumber}`;
-          await Linking.openURL(url);
-        } catch (error) {
-          // Handle the error as needed, such as logging it or displaying an alert
-          console.error('An error occurred:', error);
-          Alert.alert('Error', 'Unable to open the URL');
-        }
-      };
-
-      const directSMS = async () => {
+    const directCall = async () => {
         const phoneNumber = userContact.contact_number
 
         try {
-          const url = `sms:${phoneNumber}`;
-          await Linking.openURL(url);
+            const url = `tel:${phoneNumber}`;
+            await Linking.openURL(url);
         } catch (error) {
-          // Handle the error as needed, such as logging it or displaying an alert
-          console.error('An error occurred:', error);
-          Alert.alert('Error', 'Unable to open the URL');
+            // Handle the error as needed, such as logging it or displaying an alert
+            console.error('An error occurred:', error);
+            Alert.alert('Error', 'Unable to open the URL');
         }
-      };
+    };
+
+    const directSMS = async () => {
+        const phoneNumber = userContact.contact_number
+
+        try {
+            const url = `sms:${phoneNumber}`;
+            await Linking.openURL(url);
+        } catch (error) {
+            // Handle the error as needed, such as logging it or displaying an alert
+            console.error('An error occurred:', error);
+            Alert.alert('Error', 'Unable to open the URL');
+        }
+    };
 
     const toggleDescription = () => {
         if (!petDetails) return;
@@ -175,6 +210,7 @@ const PetDetails = ({ route }) => {
                 </TouchableOpacity>
 
                 <ScrollView style={styles.container} stickyHeaderIndices={[1]}>
+
 
                     <View key={0}>
                         <Image
@@ -257,11 +293,12 @@ const PetDetails = ({ route }) => {
                         <TouchableOpacity
                             style={styles.loginButton}
                             underlayColor={Color.sandybrown}
+                            onPress={handleReportListing} // Handle the press event here
                         >
                             <Text style={styles.loginButtonText}>Report Listing</Text>
                         </TouchableOpacity>
                     </View>
-
+                    <ReportListingModal modalVisible={modalVisible} setModalVisible={setModalVisible} onSubmit={submitReport} />
                 </ScrollView>
             </View>
         );

@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, send_from_directory, request
-from models import db, UserVerification, Vet, User, Pets, Listing, ReportListing, Pet_Owner
+from models import db, UserVerification, Vet, User, Pets, Listing, Report_Listing, Pet_Owner
 from werkzeug.security import check_password_hash, generate_password_hash
 import jwt
 from datetime import datetime, timedelta
@@ -351,6 +351,32 @@ def delete_user(user_id):
     db.session.commit()
 
     return jsonify({'message': 'User and related records deleted successfully'}), 200
+
+@app.route('/api/report', methods=['POST'])
+def create_report():
+    # Get JSON data from the request
+    data = request.get_json()
+
+    # Check if the required fields are provided
+    required_fields = ['userID', 'listingID', 'report_type', 'report_description']
+    if not all(field in data for field in required_fields):
+        return jsonify({'error': 'Missing required fields'}), 400
+
+    # Create a new ReportListing object
+    report = Report_Listing(
+        userID=data['userID'],
+        listingID=data['listingID'],
+        report_type=data['report_type'],
+        report_date=datetime.utcnow(), # Automatically set to the current date
+        report_description=data['report_description']
+    )
+
+    # Add and commit to the database
+    db.session.add(report)
+    db.session.commit()
+
+    # Return the created report
+    return jsonify(report.to_dict()), 201
 
 
 @app.route('/api/pets', methods=['GET'])

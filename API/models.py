@@ -91,7 +91,8 @@ class Listing(db.Model):
         }
 
 
-class ReportListing(db.Model):
+class Report_Listing(db.Model):
+    __tablename__ = 'Report_Listing'
     reportID = db.Column(db.Integer, primary_key=True)
     userID = db.Column(db.Integer, db.ForeignKey('user.userID'))
     listingID = db.Column(db.Integer, db.ForeignKey('listing.listingID'))
