@@ -46,7 +46,16 @@ const CreateListing = () => {
             resetScrollToCoords={{ x: 0, y: 0 }}
             scrollEnabled={true}
         >
+             <TouchableOpacity
+                style={styles.backButton}
+                onPress={() => navigation.goBack()} // Navigate back to the previous screen
+            >
+                <Text style={styles.backButtonText}>&lt;</Text>
+            </TouchableOpacity>
+            
             <View style={[styles.container]}>
+
+           
 
                 <View style={styles.login}>
                     <View style={styles.welcomeContainer}>
@@ -169,6 +178,23 @@ const styles = StyleSheet.create({
         paddingTop: windowHeight * 0.03,
         height: '100%'
     },
+    backButton: {
+        position: 'absolute',
+        top: 10, // adjust this value as per your needs
+        left: 10, // adjust this value as per your needs
+        width: windowHeight * 0.05,
+        height: windowHeight * 0.05,
+        borderRadius: 20,
+        backgroundColor: '#FF9E5C',
+        alignItems: "center",
+        zIndex: 1, // make sure the button is above other elements
+    },
+    backButtonText: {
+        paddingTop: windowHeight * 0.004,
+        fontSize: 24,
+        color: Color.dimgray,
+        fontWeight: "700",
+    },
     selectDateButton: {
         justifyContent: 'center',
         height: '7.5%',
@@ -199,6 +225,7 @@ const styles = StyleSheet.create({
     },
     welcomeContainer: {
         marginLeft: windowHeight * 0.01,
+        marginTop: '7%',
     },
     welcomeBackText: {
         fontSize: 36,

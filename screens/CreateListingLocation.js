@@ -57,7 +57,7 @@ const CreateListingLocation = () => {
         <View style={[styles.container]}>
             <TouchableOpacity
                 style={styles.backButton}
-                onPress={() => navigation.navigate.goBack} // Navigate back to the previous screen
+                onPress={() => navigation.goBack()} // Navigate back to the previous screen
             >
                 <Text style={styles.backButtonText}>&lt;</Text>
             </TouchableOpacity>
