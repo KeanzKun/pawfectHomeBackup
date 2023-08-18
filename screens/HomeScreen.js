@@ -95,14 +95,15 @@ const HomeScreen = () => {
   }, [fetchData]);
 
   const renderItem = ({ item }) => {
-    const imageUrl = `${SERVER_ADDRESS}/api/pets/pet_image/${item.pet.pet_photo}`; // Fetch pet details from pet object
-    const petAge = getAgeFromDate(item.pet.pet_age);  // Fetch pet details from pet object
+    const firstPhoto = item.pet.pet_photo.split(';')[0];
+    const imageUrl = `${SERVER_ADDRESS}/api/pets/pet_image/${firstPhoto}`;
+    const petAge = getAgeFromDate(item.pet.pet_age);
 
 
     return (
       <TouchableOpacity
         style={styles.item}
-        onPress={() => navigation.navigate("PetDetails", { listingID: item.listing.listingID, petAge: petAge })}  // Pass the listing ID
+        onPress={() => navigation.navigate("PetDetails", { listingID: item.listing.listingID, petAge: petAge })}
       >
         <Image source={{ uri: imageUrl }} style={styles.itemImage} />
         <View style={styles.itemTextContainer}>
@@ -175,7 +176,7 @@ const HomeScreen = () => {
         onRefresh={fetchData}  // Add this line
         refreshing={refreshing}  // And this line
       />
-      
+
     </View>
   );
 };

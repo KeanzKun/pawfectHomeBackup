@@ -1,7 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { Text, StyleSheet, TouchableOpacity, Pressable, View, Image, ScrollView, TouchableHighlight, FlatList, Dimensions } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Color, FontFamily } from "../GlobalStyles";
+import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
+import { check, PERMISSIONS, RESULTS, request } from 'react-native-permissions';
 
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
@@ -17,6 +19,32 @@ const DATA = [
 ];
 
 const CreateListing2 = () => {
+    const [userImage, setUserImage] = useState(null);
+
+    const chooseImage = () => {
+        const options = {
+            title: 'Select Photo',
+            storageOptions: {
+                skipBackup: true,
+                path: 'images',
+            },
+        };
+
+        launchImageLibrary(options, (response) => {
+            if (response.didCancel) {
+                console.log('User cancelled image picker');
+            } else if (response.error) {
+                console.log('ImagePicker Error: ', response.error);
+            } else if (response.assets && response.assets[0] && response.assets[0].uri) {
+                const source = { uri: response.assets[0].uri };
+                setUserImage(source);
+                console.log(source);
+            }
+        });
+    };
+
+
+
     const renderItem = ({ item }) => (
         <TouchableOpacity style={styles.item}>
             <View style={styles.itemTextContainer}>
@@ -27,49 +55,58 @@ const CreateListing2 = () => {
     const navigation = useNavigation();
 
     return (
-        <ScrollView scrollEnabled={false}>
-            <View style={[styles.container, { height: windowHeight }]}>
 
-                <View style={{ flex: 1.5}}>
-                    <TouchableHighlight
-                        style={styles.backButton}
-                        onPress={() => navigation.navigate("AccountSetting")} // Navigate back to the previous screen
-                    >
-                        <Text style={styles.backButtonText}>X</Text>
-                    </TouchableHighlight>
+        <View style={[styles.container, { height: windowHeight }]}>
 
-                    <View style={styles.titleContainer}>
-                        <Text style={styles.titleText}>One Step Left!</Text>
-                        <Text style={styles.subTitleText}>Your pet is closer to get a new home!</Text>
-                    </View>
+            <View style={{ flex: 1.5 }}>
+                <TouchableHighlight
+                    style={styles.backButton}
+                    onPress={() => navigation.navigate("AccountSetting")} // Navigate back to the previous screen
+                >
+                    <Text style={styles.backButtonText}>X</Text>
+                </TouchableHighlight>
 
-                </View>
-                <FlatList
-                    data={DATA}
-                    renderItem={renderItem}
-                    keyExtractor={item => item.id}
-                    style={{ height: 3 * (windowHeight * 0.02 + windowWidth * 0.03) }}
-                />
-
-                <View style={styles.addContainer}>
-
-                    <TouchableOpacity style={styles.addBox} onPress={() => console.log("Add pressed")}>
-                        <Text style={styles.addBoxText}>+</Text>
-                        <Text style={styles.addBoxTextUploadPhoto}>Upload Photo</Text>
-                    </TouchableOpacity>
-                </View>
-                <View style={styles.buttonFrame}>
-                    <TouchableHighlight
-                        style={styles.button}
-                        onPress={() => navigation.navigate("CreateListing3")}
-                        underlayColor={Color.sandybrown}
-                    >
-                        <Text style={styles.buttonText}>Submit</Text>
-                    </TouchableHighlight>
+                <View style={styles.titleContainer}>
+                    <Text style={styles.titleText}>One Step Left!</Text>
+                    <Text style={styles.subTitleText}>Your pet is closer to get a new home!</Text>
                 </View>
 
             </View>
-        </ScrollView>
+
+            {/* Display image for debugging */}
+            {userImage && (
+                <View style={{ alignItems: 'center', marginTop: 10 }}>
+                    <Text>Uploaded Image:</Text>
+                    <Image source={userImage} style={{ width: 150, height: 150, marginTop: 10 }} />
+                </View>
+            )}
+
+            <FlatList
+                data={DATA}
+                renderItem={renderItem}
+                keyExtractor={item => item.id}
+                style={{ height: 3 * (windowHeight * 0.02 + windowWidth * 0.03) }}
+            />
+
+            <View style={styles.addContainer}>
+                <TouchableOpacity style={styles.addBox} onPress={chooseImage}>
+                    <Text style={styles.addBoxText}>+</Text>
+                    <Text style={styles.addBoxTextUploadPhoto}>Upload Photo</Text>
+                </TouchableOpacity>
+            </View>
+
+            <View style={styles.buttonFrame}>
+                <TouchableHighlight
+                    style={styles.button}
+                    onPress={() => navigation.navigate("CreateListing3")}
+                    underlayColor={Color.sandybrown}
+                >
+                    <Text style={styles.buttonText}>Submit</Text>
+                </TouchableHighlight>
+            </View>
+
+        </View>
+
     );
 };
 

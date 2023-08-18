@@ -36,6 +36,8 @@ import PasswordChanged from "./screens/PasswordChanged";
 import DeleteAccount from "./screens/DeleteAccount";
 import DeleteAccount2 from "./screens/DeleteAccount2";
 import DeleteAccount3 from "./screens/DeleteAccount3";
+import CreateListingLocation from "./screens/CreateListingLocation";
+
 import { Color, FontFamily } from './GlobalStyles'
 
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -106,7 +108,7 @@ const BottomTabNavigator = () => {
         ),
       }} />
       <Tab.Screen name="MissingPet" component={MissingPetScreen} options={{
-        tabBarLabel: 'Missing Pet', tabBarIcon: ({ color, size }) => (
+        tabBarLabel: 'Lost', tabBarIcon: ({ color, size }) => (
           <MaterialCommunityIcons name="crosshairs-question" color={color} size={windowHeight * 0.03} />
         ),
       }} />
@@ -138,6 +140,7 @@ const App = () => {
         <Stack.Screen name="CreateListing" component={CreateListing} />
         <Stack.Screen name="CreateListing2" component={CreateListing2} />
         <Stack.Screen name="CreateListing3" component={CreateListing3} />
+        <Stack.Screen name="CreateListingLocation" component={CreateListingLocation} />
         <Stack.Screen name="PetDetails" component={PetDetails} />
         <Stack.Screen name="VetDetails" component={VetDetails} />
         <Stack.Screen name="MissingPetDetails" component={MissingPetDetails} />

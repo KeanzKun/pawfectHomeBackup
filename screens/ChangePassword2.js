@@ -65,6 +65,7 @@ const ChangePassword2 = () => {
             const result = await response.json();
 
             if (response.status === 200) {
+                await AsyncStorage.removeItem('token');
                 // Password was updated, navigate to the next screen or show success message
                 navigation.navigate("PasswordChanged");
             } else {

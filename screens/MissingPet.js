@@ -49,7 +49,8 @@ const MissingPetScreen = () => {
   }, [fetchData]);
 
   const renderItem = ({ item }) => {
-    const imageUrl = `${SERVER_ADDRESS}/api/pets/pet_image/${item.pet.pet_photo}`;
+    const firstPhoto = item.pet.pet_photo.split(';')[0];
+    const imageUrl = `${SERVER_ADDRESS}/api/pets/pet_image/${firstPhoto}`;
     const petAge = getAgeFromDate(item.pet.pet_age);
 
     return (

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Modal, BackHandler, Alert, Linking, View, Text, TouchableOpacity, Dimensions, StyleSheet, ScrollView, Image, ActivityIndicator } from 'react-native';
+import { Animated, BackHandler, Alert, Linking, View, Text, TouchableOpacity, Dimensions, StyleSheet, ScrollView, Image, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome'; // Assuming you are using FontAwesome for icons
 import { Color, FontFamily } from "../GlobalStyles";
 import { useNavigation } from '@react-navigation/native';
@@ -7,6 +7,8 @@ import ReportListingModal from '../components/ReportListingModal';
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import Swiper from 'react-native-swiper';
+
 import { SERVER_ADDRESS } from '../config';
 
 function formatDate(dateString) {
@@ -31,7 +33,8 @@ const PetDetails = ({ route }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [userContact, setUserContact] = useState(null);
     const [modalVisible, setModalVisible] = useState(false);
-
+    const [activeIndex, setActiveIndex] = useState(0);
+    
     const handleReportListing = () => {
         setModalVisible(true);
     };
@@ -193,7 +196,8 @@ const PetDetails = ({ route }) => {
             </View>
         );
     } else { // Once data is available, render your component with actual data
-        const imageUrl = `${SERVER_ADDRESS}/api/pets/pet_image/${petDetails.pet.pet_photo}`;
+        const imageFilenames = petDetails.pet.pet_photo.split(';');
+        const imageUrls = imageFilenames.map(filename => `${SERVER_ADDRESS}/api/pets/pet_image/${filename}`);
         const { petAge } = route.params;
         const formattedDate = formatDate(petDetails.listing.listing_date);
         const gender = 'gender-' + petDetails.pet.pet_gender;
@@ -210,14 +214,36 @@ const PetDetails = ({ route }) => {
                 </TouchableOpacity>
 
                 <ScrollView style={styles.container} stickyHeaderIndices={[1]}>
-
-
-                    <View key={0}>
-                        <Image
-                            source={{ uri: imageUrl }}
-                            style={styles.image}
-                        />
-                    </View>
+                    <Swiper
+                        height={windowHeight * 0.4}
+                        showsButtons={false}
+                        dot={<View style={{
+                            backgroundColor: 'rgba(255, 158, 92 ,.7)',
+                            width: windowWidth * 0.02,
+                            marginHorizontal: '1%',
+                            height: 8,
+                            borderRadius: 4,
+                            marginBottom: '5%'
+                        }} />}
+                        activeDot={<View style={{
+                            backgroundColor: Color.sandybrown,
+                            width: windowWidth * 0.04,
+                            height: windowHeight * 0.01,
+                            borderRadius: 4,
+                            marginBottom: '5%'
+                        }} />}
+                        paginationStyle={{
+                            alignSelf: 'center'
+                        }}
+                    >
+                        {imageUrls.map((imageUrl, index) => (
+                            <Image
+                                key={index}
+                                source={{ uri: imageUrl }}
+                                style={styles.image}
+                            />
+                        ))}
+                    </Swiper>
 
                     <View key={1} style={styles.detailsContainer}>
                         <Text style={styles.petName}>

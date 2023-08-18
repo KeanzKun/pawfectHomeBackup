@@ -12,19 +12,19 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://us3r:1234@localhost/paw
 db.init_app(app)
 
 
-#app.config['MAIL_SERVER'] = 'smtp-mail.outlook.com'
-# app.config['MAIL_PORT'] = 587
-# app.config['MAIL_USERNAME'] = 'pawfectHome@hotmail.com'
-# app.config['MAIL_PASSWORD'] = 'pawfectFYP123.'
-# app.config['MAIL_USE_TLS'] = True
-# app.config['MAIL_USE_SSL'] = False
+app.config['MAIL_SERVER'] = 'smtp-mail.outlook.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USERNAME'] = 'pawfectHome@hotmail.com'
+app.config['MAIL_PASSWORD'] = 'pawfectFYP123.'
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USE_SSL'] = False
 
-app.config['MAIL_SERVER'] = 'imap.gmail.com'
-app.config['MAIL_PORT'] = 465
-app.config['MAIL_USERNAME'] = 'kemonomimikawaiides@gmail.com'
-app.config['MAIL_PASSWORD'] = 'Iamkeanfong<3.'
-app.config['MAIL_USE_TLS'] = False
-app.config['MAIL_USE_SSL'] = True
+# app.config['MAIL_SERVER'] = 'imap.gmail.com'
+# app.config['MAIL_PORT'] = 465
+# app.config['MAIL_USERNAME'] = 'kemonomimikawaiides@gmail.com'
+# app.config['MAIL_PASSWORD'] = 'Iamkeanfong<3.'
+# app.config['MAIL_USE_TLS'] = False
+# app.config['MAIL_USE_SSL'] = True
 
 mail = Mail(app)
 

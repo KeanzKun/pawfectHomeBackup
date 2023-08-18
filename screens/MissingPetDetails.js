@@ -5,6 +5,7 @@ import { Color, FontFamily } from "../GlobalStyles";
 import { useNavigation } from '@react-navigation/native';
 import { SERVER_ADDRESS } from '../config';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import Swiper from 'react-native-swiper';
 
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
@@ -55,89 +56,89 @@ const MissingPetDetails = ({ route }) => {
     useEffect(() => {
         // Handle the back button press event
         const handleBackPress = () => {
-          navigation.goBack(); // Exit the app
-          return true; // Prevent default behavior
+            navigation.goBack(); // Exit the app
+            return true; // Prevent default behavior
         };
-    
+
         // Add the event listener
         BackHandler.addEventListener('hardwareBackPress', handleBackPress);
-    
+
         // Return a cleanup function to remove the event listener
         return () => {
-          BackHandler.removeEventListener('hardwareBackPress', handleBackPress);
+            BackHandler.removeEventListener('hardwareBackPress', handleBackPress);
         };
-      }, []);
+    }, []);
 
     useEffect(() => {
         if (petDetails) {
-          getUserContacts();
+            getUserContacts();
         }
-      }, [petDetails, getUserContacts]);
+    }, [petDetails, getUserContacts]);
 
     const getUserContacts = useCallback(async () => {
         try {
-          const userID = petDetails.listing.userID;
-          const response = await fetch(`${SERVER_ADDRESS}/api/user/${userID}`);
-          const json = await response.json();
-          setUserContact(json); // Modify this line to match the structure of your response
+            const userID = petDetails.listing.userID;
+            const response = await fetch(`${SERVER_ADDRESS}/api/user/${userID}`);
+            const json = await response.json();
+            setUserContact(json); // Modify this line to match the structure of your response
         } catch (error) {
-          console.error(error);
+            console.error(error);
         }
-      }, [petDetails]);
+    }, [petDetails]);
 
     const directWhatsapp = async () => {
 
         const whatsappNumber = userContact.contact_number.slice(3);
         console.log(whatsappNumber)
         try {
-          const url = `https://wa.me/${whatsappNumber}`;
-          await Linking.openURL(url);
+            const url = `https://wa.me/${whatsappNumber}`;
+            await Linking.openURL(url);
         } catch (error) {
-          // Handle the error as needed, such as logging it or displaying an alert
-          console.error('An error occurred:', error);
-          Alert.alert('Error', 'Unable to open the URL');
+            // Handle the error as needed, such as logging it or displaying an alert
+            console.error('An error occurred:', error);
+            Alert.alert('Error', 'Unable to open the URL');
         }
-      };
+    };
 
-      const directEmail = async () => {
+    const directEmail = async () => {
         const email = userContact.user_email;
 
         try {
-          const query = encodeURIComponent(email);
-          const url = `mailto:${query}`;
-          await Linking.openURL(url);
+            const query = encodeURIComponent(email);
+            const url = `mailto:${query}`;
+            await Linking.openURL(url);
         } catch (error) {
-          // Handle the error as needed, such as logging it or displaying an alert
-          console.error('An error occurred:', error);
-          Alert.alert('Error', 'Unable to open the URL');
+            // Handle the error as needed, such as logging it or displaying an alert
+            console.error('An error occurred:', error);
+            Alert.alert('Error', 'Unable to open the URL');
         }
-      };
+    };
 
-      const directCall = async () => {
-        const phoneNumber = userContact.contact_number
-        
-        try {
-          const url = `tel:${phoneNumber}`;
-          await Linking.openURL(url);
-        } catch (error) {
-          // Handle the error as needed, such as logging it or displaying an alert
-          console.error('An error occurred:', error);
-          Alert.alert('Error', 'Unable to open the URL');
-        }
-      };
-
-      const directSMS = async () => {
+    const directCall = async () => {
         const phoneNumber = userContact.contact_number
 
         try {
-          const url = `sms:${phoneNumber}`;
-          await Linking.openURL(url);
+            const url = `tel:${phoneNumber}`;
+            await Linking.openURL(url);
         } catch (error) {
-          // Handle the error as needed, such as logging it or displaying an alert
-          console.error('An error occurred:', error);
-          Alert.alert('Error', 'Unable to open the URL');
+            // Handle the error as needed, such as logging it or displaying an alert
+            console.error('An error occurred:', error);
+            Alert.alert('Error', 'Unable to open the URL');
         }
-      };
+    };
+
+    const directSMS = async () => {
+        const phoneNumber = userContact.contact_number
+
+        try {
+            const url = `sms:${phoneNumber}`;
+            await Linking.openURL(url);
+        } catch (error) {
+            // Handle the error as needed, such as logging it or displaying an alert
+            console.error('An error occurred:', error);
+            Alert.alert('Error', 'Unable to open the URL');
+        }
+    };
 
     const toggleDescription = () => {
         if (!petDetails) return;
@@ -158,7 +159,8 @@ const MissingPetDetails = ({ route }) => {
             </View>
         );
     } else {
-        const imageUrl = `${SERVER_ADDRESS}/api/pets/pet_image/${petDetails.pet.pet_photo}`;
+        const imageFilenames = petDetails.pet.pet_photo.split(';');
+        const imageUrls = imageFilenames.map(filename => `${SERVER_ADDRESS}/api/pets/pet_image/${filename}`);
         const { petAge } = route.params;
         const formattedDate = formatDate(petDetails.listing.listing_date);
         const gender = 'gender-' + petDetails.pet.pet_gender;
@@ -174,13 +176,36 @@ const MissingPetDetails = ({ route }) => {
                 </TouchableOpacity>
 
                 <ScrollView style={styles.container} stickyHeaderIndices={[1]}>
-
-                    <View key={0}>
-                        <Image
-                            source={{ uri: imageUrl }}
-                            style={styles.image}
-                        />
-                    </View>
+                    <Swiper
+                        height={windowHeight * 0.4}
+                        showsButtons={false}
+                        dot={<View style={{
+                            backgroundColor: 'rgba(255, 158, 92 ,.7)',
+                            width: windowWidth * 0.02,
+                            marginHorizontal: '1%',
+                            height: 8,
+                            borderRadius: 4,
+                            marginBottom: '5%'
+                        }} />}
+                        activeDot={<View style={{
+                            backgroundColor: Color.sandybrown,
+                            width: windowWidth * 0.04,
+                            height: windowHeight * 0.01,
+                            borderRadius: 4,
+                            marginBottom: '5%'
+                        }} />}
+                        paginationStyle={{
+                            alignSelf: 'center'
+                        }}
+                    >
+                        {imageUrls.map((imageUrl, index) => (
+                            <Image
+                                key={index}
+                                source={{ uri: imageUrl }}
+                                style={styles.image}
+                            />
+                        ))}
+                    </Swiper>
 
                     <View key={1} style={styles.detailsContainer}>
                         <Text style={styles.petName}>

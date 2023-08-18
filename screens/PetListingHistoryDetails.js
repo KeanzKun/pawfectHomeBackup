@@ -3,8 +3,8 @@ import { BackHandler, View, Text, TouchableOpacity, Dimensions, StyleSheet, Scro
 import Icon from 'react-native-vector-icons/FontAwesome'; // Assuming you are using FontAwesome for icons
 import { Color, FontFamily } from "../GlobalStyles";
 import { useNavigation } from '@react-navigation/native';
-import { SERVER_ADDRESS } from '../config'; 
-
+import { SERVER_ADDRESS } from '../config';
+import Swiper from 'react-native-swiper';
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
 
@@ -38,18 +38,18 @@ const PetListingHistoryDetails = ({ route }) => {
     useEffect(() => {
         // Handle the back button press event
         const handleBackPress = () => {
-          navigation.goBack(); // Exit the app
-          return true; // Prevent default behavior
+            navigation.goBack(); // Exit the app
+            return true; // Prevent default behavior
         };
-    
+
         // Add the event listener
         BackHandler.addEventListener('hardwareBackPress', handleBackPress);
-    
+
         // Return a cleanup function to remove the event listener
         return () => {
-          BackHandler.removeEventListener('hardwareBackPress', handleBackPress);
+            BackHandler.removeEventListener('hardwareBackPress', handleBackPress);
         };
-      }, []);
+    }, []);
 
     useEffect(() => {
         const fetchPetDetails = async () => {
@@ -95,7 +95,8 @@ const PetListingHistoryDetails = ({ route }) => {
             </View>
         );
     } else { // Once data is available, render your component with actual data
-        const imageUrl = `${SERVER_ADDRESS}/api/pets/pet_image/${petDetails.pet.pet_photo}`;
+        const imageFilenames = petDetails.pet.pet_photo.split(';');
+        const imageUrls = imageFilenames.map(filename => `${SERVER_ADDRESS}/api/pets/pet_image/${filename}`);
         const { petAge } = route.params;
         const formattedDate = formatDate(petDetails.listing.listing_date);
         return (
@@ -111,12 +112,36 @@ const PetListingHistoryDetails = ({ route }) => {
 
                 <ScrollView style={styles.container} stickyHeaderIndices={[1]}>
 
-                    <View key={0}>
-                        <Image
-                            source={{ uri: imageUrl }}
-                            style={styles.image}
-                        />
-                    </View>
+                    <Swiper
+                        height={windowHeight * 0.4}
+                        showsButtons={false}
+                        dot={<View style={{
+                            backgroundColor: 'rgba(255, 158, 92 ,.7)',
+                            width: windowWidth * 0.02,
+                            marginHorizontal: '1%',
+                            height: 8,
+                            borderRadius: 4,
+                            marginBottom: '5%'
+                        }} />}
+                        activeDot={<View style={{
+                            backgroundColor: Color.sandybrown,
+                            width: windowWidth * 0.04,
+                            height: windowHeight * 0.01,
+                            borderRadius: 4,
+                            marginBottom: '5%'
+                        }} />}
+                        paginationStyle={{
+                            alignSelf: 'center'
+                        }}
+                    >
+                        {imageUrls.map((imageUrl, index) => (
+                            <Image
+                                key={index}
+                                source={{ uri: imageUrl }}
+                                style={styles.image}
+                            />
+                        ))}
+                    </Swiper>
 
                     <View key={1} style={styles.detailsContainer}>
                         <Text style={styles.petName}>

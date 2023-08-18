@@ -3,10 +3,10 @@ import { View, Text, TextInput, Button, FlatList, Image, TouchableOpacity, Style
 import { Color, FontFamily } from "../GlobalStyles";
 import { Header } from '@react-navigation/elements';
 import { useNavigation } from '@react-navigation/native';
-import { fetchUserDetails} from '../components/UserService';
+import { fetchUserDetails } from '../components/UserService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import TextStroke from '../components/TextStroke';
-import { SERVER_ADDRESS } from '../config'; 
+import { SERVER_ADDRESS } from '../config';
 
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
@@ -64,20 +64,21 @@ const PetListingHistoryScreen = () => {
     useEffect(() => {
         // Add focus listener
         const unsubscribe = navigation.addListener('focus', () => {
-          console.log('PetListingActiveScreen is focused');
-          getActiveListing();
+            console.log('PetListingActiveScreen is focused');
+            getActiveListing();
         });
-    
+
         console.log('PetListingActiveScreen re-rendered');
         getActiveListing();
-    
+
         // Clean up the listener when the component is unmounted
         return unsubscribe;
-      }, [userDetails]);
+    }, [userDetails]);
 
     const renderItem = ({ item }) => {
-        const imageUrl = `${SERVER_ADDRESS}/api/pets/pet_image/${item.pet.pet_photo}`; // Fetch pet details from pet object
-        const petAge = getAgeFromDate(item.pet.pet_age);  // Fetch pet details from pet object
+        const firstPhoto = item.pet.pet_photo.split(';')[0];
+        const imageUrl = `${SERVER_ADDRESS}/api/pets/pet_image/${firstPhoto}`;
+        const petAge = getAgeFromDate(item.pet.pet_age);
 
         return (
             <TouchableOpacity
@@ -86,7 +87,7 @@ const PetListingHistoryScreen = () => {
             >
                 <Image source={{ uri: imageUrl }} style={styles.itemImage} />
                 <View style={styles.itemTextContainer}>
-                <TextStroke stroke="#533e41" strokeWidth={0.3} style={[styles.itemText, { color: Color.sandybrown, fontSize: 15, fontWeight: '800',marginBottom: '60%' }]}>{item.listing.listing_type}  ({item.listing.listing_status}) </TextStroke >
+                    <TextStroke stroke="#533e41" strokeWidth={0.3} style={[styles.itemText, { color: Color.sandybrown, fontSize: 15, fontWeight: '800', marginBottom: '60%' }]}>{item.listing.listing_type}  ({item.listing.listing_status}) </TextStroke >
                     <TextStroke stroke="#533e41" strokeWidth={0.3} style={[styles.itemText, { fontSize: 19, fontWeight: '800' }]}>{item.pet.pet_name}</TextStroke >
                     <TextStroke stroke="#533e41" strokeWidth={0.1} style={styles.itemText}>{item.pet.pet_breed}</TextStroke>
                     <TextStroke stroke="#533e41" strokeWidth={0.1} style={styles.itemText}>{petAge} {item.pet.pet_gender}</TextStroke>

@@ -1,40 +1,105 @@
-import React from "react";
-import { Text, StyleSheet, Pressable, View, ScrollView, TouchableHighlight, Dimensions, KeyboardAvoidingView, Platform } from "react-native";
+import React, { useState, useEffect } from "react";
+import { Text, StyleSheet, TouchableOpacity, View, ScrollView, TouchableHighlight, Dimensions, KeyboardAvoidingView, Platform } from "react-native";
 import { Button, Input } from "@rneui/themed";
 import { useNavigation } from "@react-navigation/native";
 import { Color, FontFamily } from "../GlobalStyles";
+import { Picker } from '@react-native-picker/picker'; // Import Picker
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
+import DateTimePicker from '@react-native-community/datetimepicker';
+import Geolocation from '@react-native-community/geolocation';
+import MapView, { Marker } from 'react-native-maps';
+
 const windowHeight = Dimensions.get("window").height;
 
-const SignUp = () => {
+const CreateListing = () => {
     const navigation = useNavigation();
+    const [reportReason, setReportReason] = useState(null);
+    const [date, setDate] = useState(new Date());
+    const [show, setShow] = useState(false);
+    const [hasDateBeenPicked, setHasDateBeenPicked] = useState(false);
+    const [adoptionFee, setAdoptionFee] = useState('');
+    const [location, setLocation] = useState(null);
+
+    function dateFormatter(dateObj) {
+        const yyyy = dateObj.getFullYear();
+        const mm = String(dateObj.getMonth() + 1).padStart(2, '0'); // January is 0!
+        const dd = String(dateObj.getDate()).padStart(2, '0');
+
+        return `${yyyy}-${mm}-${dd}`;
+    }
+
+
+    const onChange = (event, selectedDate) => {
+        setShow(Platform.OS === 'ios');
+        setDate(selectedDate || date);
+        setHasDateBeenPicked(true);
+    };
+
+    const showDatePicker = () => {
+        setShow(true);
+    };
 
     return (
         <KeyboardAwareScrollView
-            style={{ backgroundColor: '#4c69a5', flex:1 }}
+            style={{ backgroundColor: "#f5f5f5" }}
             resetScrollToCoords={{ x: 0, y: 0 }}
             scrollEnabled={true}
         >
-            <View style={[styles.container, { height: windowHeight }]}>
+            <View style={[styles.container]}>
 
                 <View style={styles.login}>
                     <View style={styles.welcomeContainer}>
                         <Text style={styles.welcomeBackText}>Create Listing.</Text>
-                        <Text style={styles.loginToContinueText}>Your pet deserves second home</Text>
+                        <Text style={styles.loginToContinueText}>Your pet deserves a second home</Text>
                     </View>
 
                     <View style={styles.usernameFieldContainer}>
-                        <Text style={styles.emailLabel}>Animal Species</Text>
+                        <View style={styles.dropdownContainer}>
+                            <Text style={styles.emailLabel}>Animal type</Text>
+                            <View style={styles.pickerContainer}>
+                                <Picker
+                                    selectedValue={reportReason}
+                                    itemStyle={styles.pickerItem}
+                                    onValueChange={(itemValue) => setReportReason(itemValue)}
+                                >
+                                    <Picker.Item label="Select anime type..." value={null} />
+                                    <Picker.Item label="Cat" value="Cat" />
+                                    <Picker.Item label="Dog" value="Dog" />
+                                    <Picker.Item label="Bird" value="Bird" />
+                                    <Picker.Item label="Hamster" value="Hamster" />
+                                    <Picker.Item label="Reptile" value="Reptile" />
+                                    <Picker.Item label="Furry" value="Furry" />
+                                </Picker>
+                            </View>
+                        </View>
+
+
+                        <Text style={styles.emailLabel}>Animal's breed</Text>
                         <Input
                             required={true}
                             inputStyle={styles.usernameInput}
                         />
 
-                        <Text style={styles.emailLabel}>Breed</Text>
-                        <Input
-                            required={true}
-                            inputStyle={styles.usernameInput}
-                        />
+                        <Text style={styles.emailLabel}>Pet's born date</Text>
+                        <TouchableOpacity
+                            style={styles.selectDateButton}
+                            onPress={showDatePicker}
+                        >
+                            <Text style={{ marginLeft: '5%', color: 'black' }}>
+                                {hasDateBeenPicked ? dateFormatter(date) : "Select Pet's Birth Date..."}
+                            </Text>
+                        </TouchableOpacity>
+
+                        {show && (
+                            <DateTimePicker
+                                testID="dateTimePicker"
+                                value={date}
+                                mode="date"
+                                display="default"
+                                onChange={onChange}
+                                maximumDate={new Date()} // Today's date
+                            />
+                        )}
 
                         <Text style={styles.emailLabel}>Pet's name</Text>
                         <Input
@@ -42,23 +107,24 @@ const SignUp = () => {
                             inputStyle={styles.usernameInput}
                         />
 
-                        <Text style={styles.emailLabel}>Pet's born date</Text>
-                        <Input
-                            required={true}
-                            inputStyle={styles.usernameInput}
-                        />
-
                         <Text style={styles.emailLabel}>Adoption Fee</Text>
-                        <Input
-                            required={true}
-                            inputStyle={styles.usernameInput}
-                        />
-
-                        <Text style={styles.emailLabel}>Location</Text>
-                        <Input
-                            required={true}
-                            inputStyle={styles.usernameInput}
-                        />
+                        <View style={{ flexDirection: 'row', }}>
+                            <View style={{ width: '16%', marginRight: '-5.7%' }}>
+                                <Input
+                                    value={'RM'}
+                                    inputStyle={styles.usernameInput}
+                                    editable={false}
+                                />
+                            </View>
+                            <View style={{ width: '90%' }}>
+                                <Input
+                                    required={true}
+                                    value={adoptionFee}
+                                    onChangeText={text => setAdoptionFee(text.replace(/[^0-9]/g, ''))} // Allow only numbers
+                                    inputStyle={styles.usernameInput}
+                                />
+                            </View>
+                        </View>
 
                         <Text style={styles.emailLabel}>Listing type</Text>
                         <Input
@@ -68,7 +134,7 @@ const SignUp = () => {
 
                         <TouchableHighlight
                             style={styles.loginButton}
-                            onPress={() => navigation.navigate("CreateListing2")}
+                            onPress={() => navigation.navigate("CreateListingLocation")}
                             underlayColor={Color.sandybrown}
                         >
                             <Text style={styles.loginButtonText}>Next</Text>
@@ -76,10 +142,10 @@ const SignUp = () => {
 
                     </View>
 
-                    
+
                 </View>
                 <View style={styles.redirectSignUp}>
-                    
+
                 </View>
             </View>
         </KeyboardAwareScrollView>
@@ -88,18 +154,40 @@ const SignUp = () => {
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
         backgroundColor: "#f5f5f5",
         alignItems: "center",
         paddingTop: windowHeight * 0.03,
+        height: '100%'
+    },
+    selectDateButton: {
+        justifyContent: 'center',
+        height: '7.5%',
+        borderRadius: 5,
+        width: '95%',
+        borderColor: 'gray',
+        borderWidth: 1,
+        alignSelf: 'center',
+        marginBottom: '5%',
+    },
+    dropdownContainer: {
+        marginBottom: '5%',
+        alignContent: 'center',
+        alignItems: 'center',
+    },
+    pickerContainer: {
+        borderWidth: 1,
+        borderColor: 'gray',
+        borderRadius: 5,
+        width: '95%'
+    },
+    pickerItem: {
+        fontSize: 16,
     },
     login: {
-        flex: 13,
         width: "90%",
         alignItems: "flex-start",
     },
     welcomeContainer: {
-        flex: 0.3,
         marginLeft: windowHeight * 0.01,
     },
     welcomeBackText: {
@@ -118,14 +206,15 @@ const styles = StyleSheet.create({
         textAlign: "left",
     },
     usernameFieldContainer: {
-        flex: 1.9,
         width: "100%",
     },
     emailLabel: {
         marginLeft: windowHeight * 0.015,
         fontSize: 16,
-        color: Color.silver,
+        color: Color.dimgray,
         fontWeight: "600",
+        alignSelf: 'flex-start',
+        marginBottom: '2%'
     },
     usernameInput: {
         marginTop: -(windowHeight * 0.009), // Adjust the margin bottom as desired
@@ -138,7 +227,7 @@ const styles = StyleSheet.create({
         height: windowHeight * 0.08,
         paddingHorizontal: windowHeight * 0.04,
         paddingVertical: windowHeight * 0.01,
-        marginBottom: windowHeight * 0.03,
+        marginBottom: windowHeight * 0.1,
         marginTop: windowHeight * 0.03,
         alignItems: "center",
         justifyContent: "center",
@@ -152,7 +241,6 @@ const styles = StyleSheet.create({
         fontWeight: "800",
     },
     redirectSignUp: {
-        flex: 2,
         backgroundColor: "#f5f5f5",
     },
     signUpText: {
@@ -165,17 +253,6 @@ const styles = StyleSheet.create({
         fontWeight: "600",
         marginTop: 5,
     },
-    dontHaveAnText: {
-        fontSize: windowHeight * 0.018,
-        letterSpacing: 0.1,
-        marginRight: 5,
-    },
-    dontHaveAnTypo: {
-        textAlign: "center",
-        color: Color.silver,
-        fontFamily: FontFamily.interSemibold,
-        fontWeight: "600",
-    },
 });
 
-export default SignUp;
+export default CreateListing;
