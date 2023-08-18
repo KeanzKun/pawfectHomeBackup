@@ -221,8 +221,8 @@ const CreateListing = () => {
                                 >
                                     <Picker.Item label="Select listing type..." value={null} />
                                     <Picker.Item label="Adopt" value="adopt" />
-                                    <Picker.Item label="Re-Home" value="re-home" />
-                                    <Picker.Item label="Missing" value="missing" />
+                                    <Picker.Item label="Re-Home" value="reHome" />
+                                    <Picker.Item label="Lost" value="missing" />
                                 </Picker>
                             </View>
                         </View>

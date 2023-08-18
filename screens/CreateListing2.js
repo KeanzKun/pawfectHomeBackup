@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Text, StyleSheet, TouchableOpacity, Pressable, View, Image, ScrollView, TouchableHighlight, FlatList, Dimensions } from "react-native";
+import { Alert, Text, StyleSheet, TouchableOpacity, Pressable, View, Image, ScrollView, TouchableHighlight, FlatList, Dimensions } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Color, FontFamily } from "../GlobalStyles";
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
@@ -32,6 +32,20 @@ const CreateListing2 = ({ route }) => {
         }
         return false;
     };
+
+    function getCurrentTimestamp() {
+        const date = new Date();
+    
+        const YYYY = date.getFullYear();
+        const MM = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+        const DD = String(date.getDate()).padStart(2, '0');
+        const hh = String(date.getHours()).padStart(2, '0');
+        const mm = String(date.getMinutes()).padStart(2, '0');
+        const ss = String(date.getSeconds()).padStart(2, '0');
+        const ms = String(date.getMilliseconds()).padStart(3, '0'); // padStart with 3 zeros for milliseconds
+    
+        return `${YYYY}${MM}${DD}${hh}${mm}${ss}${ms}`;
+    }
 
     useEffect(() => {
         const fetchUserID = async () => {
@@ -103,7 +117,15 @@ const CreateListing2 = ({ route }) => {
         let tempImageNames = []; // Temporary array to store image names
         for (let image of userImages) {
             try {
-                let imageName = `pet_${Date.now()}.jpg`;
+                
+                if (!userID) {
+                    alert("Something went wrong. Please try again.");
+                    return;
+                }
+
+                const timeStamp = getCurrentTimestamp();
+                let imageName = `${animalType}_${userID}${timeStamp}.jpg`;
+
                 tempImageNames.push(imageName); // Add the image name to the temporary array
 
                 let formData = new FormData();
@@ -143,6 +165,11 @@ const CreateListing2 = ({ route }) => {
         });
         let petData = await petResponse.json();
 
+        if (!petResponse.ok) {
+            Alert.alert('Uh Oh!', 'Something went wrong, our dog ate the data, please try again')
+            return;
+        }
+
         // 2. Insert into Pet_Owner table
         let petOwnerResponse = await fetch(`${SERVER_ADDRESS}/api/add-pet-owner`, {
             method: "POST",
@@ -154,6 +181,11 @@ const CreateListing2 = ({ route }) => {
                 petID: petData.petID
             })
         });
+
+        if (!petOwnerResponse.ok) {
+            Alert.alert('Uh Oh!', 'Something went wrong, our dog ate the data, please try again')
+            return;
+        }
 
         // 3. Insert location details
         let locationResponse = await fetch(`${SERVER_ADDRESS}/api/add-location`, {
@@ -169,6 +201,11 @@ const CreateListing2 = ({ route }) => {
             })
         });
         let locationData = await locationResponse.json();
+
+        if (!locationResponse.ok) {
+            Alert.alert('Uh Oh!', 'Something went wrong, dog ate the data, please try again')
+            return;
+        }
 
         // 4. Insert listing details
         let listingResponse = await fetch(`${SERVER_ADDRESS}/api/add-listing`, {
@@ -187,6 +224,13 @@ const CreateListing2 = ({ route }) => {
                 listing_status: 'active'
             })
         });
+
+        if (!listingResponse.ok) {
+            Alert.alert('Uh Oh!', 'Something went wrong, dog ate the data, please try again')
+            return;
+        }
+
+        navigation.navigate("CreateListing3");
 
     };
     const removeImage = (index) => {

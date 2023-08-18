@@ -7,6 +7,7 @@ import { fetchUserDetails } from '../components/UserService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import TextStroke from '../components/TextStroke';
 import { SERVER_ADDRESS } from '../config';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
@@ -75,10 +76,15 @@ const PetListingHistoryScreen = () => {
         return unsubscribe;
     }, [userDetails]);
 
+    const dataWithPhotos = listingDetails ? listingDetails.filter(item => item.pet.pet_photo) : [];
+
     const renderItem = ({ item }) => {
+        if (!item.pet.pet_photo) return null;  // Guard clause
+
         const firstPhoto = item.pet.pet_photo.split(';')[0];
         const imageUrl = `${SERVER_ADDRESS}/api/pets/pet_image/${firstPhoto}`;
         const petAge = getAgeFromDate(item.pet.pet_age);
+        const gender = 'gender-' + item.pet.pet_gender;
 
         return (
             <TouchableOpacity
@@ -88,9 +94,12 @@ const PetListingHistoryScreen = () => {
                 <Image source={{ uri: imageUrl }} style={styles.itemImage} />
                 <View style={styles.itemTextContainer}>
                     <TextStroke stroke="#533e41" strokeWidth={0.3} style={[styles.itemText, { color: Color.sandybrown, fontSize: 15, fontWeight: '800', marginBottom: '60%' }]}>{item.listing.listing_type}  ({item.listing.listing_status}) </TextStroke >
-                    <TextStroke stroke="#533e41" strokeWidth={0.3} style={[styles.itemText, { fontSize: 19, fontWeight: '800' }]}>{item.pet.pet_name}</TextStroke >
+                    <View style={{ flexDirection: 'row' }}>
+                        <TextStroke stroke="#533e41" strokeWidth={0.3} style={[styles.itemText, { fontSize: 19, fontWeight: '800' }]}>{item.pet.pet_name}</TextStroke >
+                        <MaterialCommunityIcons name={gender} color={Color.sandybrown} size={25} />
+                    </View>
                     <TextStroke stroke="#533e41" strokeWidth={0.1} style={styles.itemText}>{item.pet.pet_breed}</TextStroke>
-                    <TextStroke stroke="#533e41" strokeWidth={0.1} style={styles.itemText}>{petAge} {item.pet.pet_gender}</TextStroke>
+                    <TextStroke stroke="#533e41" strokeWidth={0.1} style={styles.itemText}>{petAge}</TextStroke>
                 </View>
             </TouchableOpacity>
         );
@@ -99,9 +108,9 @@ const PetListingHistoryScreen = () => {
     return (
         <View style={styles.container}>
             <FlatList
-                data={listingDetails} // Use the fetched data
+                data={dataWithPhotos} // Use the fetched data
                 renderItem={renderItem}
-                keyExtractor={listingDetails => listingDetails.listing.id}
+                keyExtractor={item => item.listing.listingID.toString()}
                 numColumns={2}
             />
         </View>

@@ -4,10 +4,11 @@ import { Color, FontFamily } from "../GlobalStyles";
 import { Header } from '@react-navigation/elements';
 import { useNavigation } from '@react-navigation/native';
 import { FloatingAction } from "react-native-floating-action";
-import { fetchUserDetails} from '../components/UserService';
+import { fetchUserDetails } from '../components/UserService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import TextStroke from '../components/TextStroke';
-import { SERVER_ADDRESS } from '../config'; 
+import { SERVER_ADDRESS } from '../config';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
@@ -35,18 +36,18 @@ const PetListingActiveScreen = () => {
     useEffect(() => {
         // Handle the back button press event
         const handleBackPress = () => {
-          navigation.goBack(); // Exit the app
-          return true; // Prevent default behavior
+            navigation.goBack(); // Exit the app
+            return true; // Prevent default behavior
         };
-    
+
         // Add the event listener
         BackHandler.addEventListener('hardwareBackPress', handleBackPress);
-    
+
         // Return a cleanup function to remove the event listener
         return () => {
-          BackHandler.removeEventListener('hardwareBackPress', handleBackPress);
+            BackHandler.removeEventListener('hardwareBackPress', handleBackPress);
         };
-      }, []);
+    }, []);
 
     const getActiveListing = async () => {
         if (userDetails) {
@@ -81,20 +82,25 @@ const PetListingActiveScreen = () => {
     useEffect(() => {
         // Add focus listener
         const unsubscribe = navigation.addListener('focus', () => {
-          getActiveListing();
+            getActiveListing();
         });
-    
+
         getActiveListing();
-    
+
         // Clean up the listener when the component is unmounted
         return unsubscribe;
-      }, [userDetails]);
+    }, [userDetails]);
+
+    const dataWithPhotos = listingDetails ? listingDetails.filter(item => item.pet.pet_photo) : [];
 
     const renderItem = ({ item }) => {
+        if (!item.pet.pet_photo) return null;  // Guard clause
+
         const firstPhoto = item.pet.pet_photo.split(';')[0];
         const imageUrl = `${SERVER_ADDRESS}/api/pets/pet_image/${firstPhoto}`;
         const petAge = getAgeFromDate(item.pet.pet_age);
-        
+        const gender = 'gender-' + item.pet.pet_gender;
+
         return (
             <TouchableOpacity
                 style={styles.item}
@@ -102,10 +108,13 @@ const PetListingActiveScreen = () => {
             >
                 <Image source={{ uri: imageUrl }} style={styles.itemImage} />
                 <View style={styles.itemTextContainer}>
-                <TextStroke stroke="#533e41" strokeWidth={0.3} style={[styles.itemText, { color: Color.sandybrown, fontSize: 15, fontWeight: '800',marginBottom: '60%' }]}>{item.listing.listing_type} </TextStroke >
-                    <TextStroke stroke="#533e41" strokeWidth={0.3} style={[styles.itemText, { fontSize: 19, fontWeight: '800' }]}>{item.pet.pet_name}</TextStroke >
+                    <TextStroke stroke="#533e41" strokeWidth={0.3} style={[styles.itemText, { color: Color.sandybrown, fontSize: 15, fontWeight: '800', marginBottom: '60%' }]}>{item.listing.listing_type} </TextStroke >
+                    <View style={{ flexDirection: 'row' }}>
+                        <TextStroke stroke="#533e41" strokeWidth={0.3} style={[styles.itemText, { fontSize: 19, fontWeight: '800' }]}>{item.pet.pet_name}</TextStroke >
+                        <MaterialCommunityIcons name={gender} color={Color.sandybrown} size={25} />
+                    </View>                    
                     <TextStroke stroke="#533e41" strokeWidth={0.1} style={styles.itemText}>{item.pet.pet_breed}</TextStroke>
-                    <TextStroke stroke="#533e41" strokeWidth={0.1} style={styles.itemText}>{petAge} {item.pet.pet_gender}</TextStroke>
+                    <TextStroke stroke="#533e41" strokeWidth={0.1} style={styles.itemText}>{petAge}</TextStroke>
                 </View>
             </TouchableOpacity>
         );
@@ -114,9 +123,9 @@ const PetListingActiveScreen = () => {
     return (
         <View style={styles.container}>
             <FlatList
-                data={listingDetails}
+                data={dataWithPhotos}
                 renderItem={renderItem}
-                keyExtractor={(item) => item.listing.listingID.toString()}
+                keyExtractor={item => item.listing.listingID.toString()}
                 numColumns={2}
                 extraData={reloadList}
             />

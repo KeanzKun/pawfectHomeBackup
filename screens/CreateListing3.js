@@ -1,5 +1,5 @@
-import React from "react";
-import { Text, StyleSheet, Pressable, View, ScrollView, TouchableHighlight, Dimensions } from "react-native";
+import React, {useEffect} from "react";
+import { BackHandler, Text, StyleSheet, Pressable, View, ScrollView, TouchableHighlight, Dimensions } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Color, FontFamily } from "../GlobalStyles";
 
@@ -8,13 +8,30 @@ const windowHeight = Dimensions.get("window").height;
 const CreateListing3 = () => {
   const navigation = useNavigation();
 
+  useEffect(() => {
+    // Handle the back button press event
+    const handleBackPress = () => {
+      navigation.navigate('HomeScreen'); // Exit the app
+      return true; // Prevent default behavior
+    };
+
+    // Add the event listener
+    BackHandler.addEventListener('hardwareBackPress', handleBackPress);
+
+    // Return a cleanup function to remove the event listener
+    return () => {
+      BackHandler.removeEventListener('hardwareBackPress', handleBackPress);
+    };
+  }, []);
+
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.login}>
         <View style={styles.welcomeContainer}>
           <Text style={styles.welcomeBackText}>All Set!</Text>
           <Text style={styles.loginToContinueText}>You may view your listing in</Text>
-          <Text style={styles.loginToContinueText}>Account Setting -&rt; Listing</Text>
+          <Text style={styles.loginToContinueText}>Account Setting -&gt; Listing</Text>
         </View>
 
         <View style={styles.redirectSignUp}>

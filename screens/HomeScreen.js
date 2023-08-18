@@ -5,6 +5,8 @@ import { useNavigation } from '@react-navigation/native';
 import TextStroke from '../components/TextStroke';
 import SearchModal from '../components/SearchModal';
 import { SERVER_ADDRESS } from '../config';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
 
@@ -45,6 +47,8 @@ const HomeScreen = () => {
       setFilters({ ...filters, petType: type });
     }
   };
+  const dataWithPhotos = data.filter(item => item.pet.pet_photo);
+
 
   const fetchData = useCallback(async () => {
     let url;
@@ -95,10 +99,12 @@ const HomeScreen = () => {
   }, [fetchData]);
 
   const renderItem = ({ item }) => {
+    if (!item.pet.pet_photo) return null;  // Guard clause
+
     const firstPhoto = item.pet.pet_photo.split(';')[0];
     const imageUrl = `${SERVER_ADDRESS}/api/pets/pet_image/${firstPhoto}`;
     const petAge = getAgeFromDate(item.pet.pet_age);
-
+    const gender = 'gender-' + item.pet.pet_gender;
 
     return (
       <TouchableOpacity
@@ -107,13 +113,17 @@ const HomeScreen = () => {
       >
         <Image source={{ uri: imageUrl }} style={styles.itemImage} />
         <View style={styles.itemTextContainer}>
-          <TextStroke stroke="#533e41" strokeWidth={0.3} style={[styles.itemText, { fontSize: 19, fontWeight: '800' }]}>{item.pet.pet_name}</TextStroke >
+          <View style={{ flexDirection: 'row' }}>
+            <TextStroke stroke="#533e41" strokeWidth={0.3} style={[styles.itemText, { fontSize: 19, fontWeight: '800' }]}>{item.pet.pet_name}</TextStroke >
+            <MaterialCommunityIcons name={gender} color={Color.sandybrown} size={25} />
+          </View>
           <TextStroke stroke="#533e41" strokeWidth={0.1} style={styles.itemText}>{item.pet.pet_breed}</TextStroke>
-          <TextStroke stroke="#533e41" strokeWidth={0.1} style={styles.itemText}>{petAge} {item.pet.pet_gender}</TextStroke>
+          <TextStroke stroke="#533e41" strokeWidth={0.1} style={styles.itemText}>{petAge}</TextStroke>
         </View>
       </TouchableOpacity>
     );
   };
+
 
   return (
     <View style={styles.container}>
@@ -169,7 +179,7 @@ const HomeScreen = () => {
 
       </View>
       <FlatList
-        data={data}
+        data={dataWithPhotos}
         renderItem={renderItem}
         keyExtractor={item => item.pet.petID.toString()}
         numColumns={2}
