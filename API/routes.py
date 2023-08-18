@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, send_from_directory, request
-from models import db, UserVerification, Vet, User, Pets, Listing, Report_Listing, Pet_Owner
+from models import db, UserVerification, ListingLocation, Vet, User, Pets, Listing, Report_Listing, Pet_Owner
 from werkzeug.security import check_password_hash, generate_password_hash
 import jwt
 from datetime import datetime, timedelta
@@ -86,6 +86,16 @@ def check_contactNumber():
     user = User.query.filter_by(contact_number = contactNumber).first()
     print(user)
     return jsonify(exists=bool(user)), 200
+
+@app.route('/api/upload-image', methods=['POST'])
+def upload_file():
+    uploaded_file = request.files['photo']
+    print(uploaded_file.filename)
+
+    if uploaded_file.filename != '':
+        image_path = "C:\\Users\\kean5\\OneDrive\\Desktop\\Degree\\FYP\\React\\PawfectHomeTest\\assets\\pet_image\\" + uploaded_file.filename
+        uploaded_file.save(image_path)
+    return jsonify({'message': 'Upload Successfully!'}), 200
 
 
 @app.route('/api/send-email', methods=['POST'])
@@ -581,9 +591,86 @@ def get_listing(listingID):
         'user': user.to_dict()
 }), 200
 
+######################### CREATE LISTING #####################################
+
+#add pet
+@app.route('/api/add-pet', methods=['POST'])
+def add_pet():
+    data = request.get_json()
+    new_pet = Pets(
+        pet_name=data['pet_name'],
+        pet_type=data['pet_type'],
+        pet_age=data['pet_age'],
+        pet_gender=data['pet_gender'],
+        pet_breed=data['pet_breed'],
+        pet_photo=data['pet_photo'],
+        availablity_status="Available"  # Defaulting to Available
+    )
+    db.session.add(new_pet)
+    db.session.commit()
+    return jsonify({'petID': new_pet.petID}), 200
+
 @app.route('/')
 def home():
     return 'Server is working!', 200
+
+
+#add petOwner
+@app.route('/api/add-pet-owner', methods=['POST'])
+def add_pet_owner():
+    data = request.get_json()
+    new_pet_owner = Pet_Owner(
+        userID=data['userID'],
+        petID=data['petID']
+    )
+    db.session.add(new_pet_owner)
+    db.session.commit()
+    return jsonify({'message': 'Pet owner relationship added successfully'}), 200
+
+#addLocation
+@app.route('/api/add-location', methods=['POST'])
+def add_location():
+    data = request.get_json()
+    latitude = data.get('latitude')
+    longitude = data.get('longitude')
+    city = data.get('city')
+    state = data.get('state')
+
+    print('ADD LOCATION', data)
+
+    if not all([latitude, longitude, city, state]):
+        return jsonify({'error': 'Missing required data'}), 400
+    
+    new_location = ListingLocation(  # Use the correct class name here
+        latitude=data['latitude'],
+        longitude=data['longitude'],
+        city=data['city'],
+        state=data['state']
+    )
+    
+    db.session.add(new_location)
+    db.session.commit()
+    return jsonify({'locationID': new_location.locationID}), 200
+
+
+#addListing
+@app.route('/api/add-listing', methods=['POST'])
+def add_listing():
+    data = request.get_json()
+    new_listing = Listing(
+        petID=data['petID'],
+        listing_description=data['listing_description'],
+        userID=data['userID'],
+        locationID=data['locationID'],
+        listing_type=data['listing_type'],
+        adoption_fee=data['adoption_fee'],
+        listing_date=data['listing_date'],
+        listing_status=data['listing_status']
+    )
+    db.session.add(new_listing)
+    db.session.commit()
+    return jsonify({'listingID': new_listing.listingID}), 200
+
 
 
 # if __name__ == '__main__':

@@ -4,8 +4,8 @@ import { Button, Input } from "@rneui/themed";
 import { useNavigation } from "@react-navigation/native";
 import { Color, FontFamily } from "../GlobalStyles";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { SERVER_ADDRESS } from '../config'; 
-
+import { SERVER_ADDRESS } from '../config';
+import { fetchUserDetails } from "../components/UserService";
 
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
@@ -43,7 +43,7 @@ const Login = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          user_email: userEmail, // Use the userEmail state variable
+          user_email: userEmail,
           password: password,
         }),
       });
@@ -53,14 +53,18 @@ const Login = () => {
         // Store the token
         await AsyncStorage.setItem('token', json.token);
 
+        // Fetch user details using the function and store userID in AsyncStorage
+        fetchUserDetails((data) => {
+          AsyncStorage.setItem('userID', data.user.userID.toString());
+        });
+
         navigation.reset({
           index: 0,
-          routes: [{ name: 'Main' }], // Navigate to the main screen and reset the navigation stack
-        }); 
-        
+          routes: [{ name: 'Main' }],
+        });
       } else {
-        setModalMessage(json.message); // Set the message
-        setModalVisible(true); // Show the modal
+        setModalMessage(json.message);
+        setModalVisible(true);
       }
     } catch (error) {
       console.error(error);
@@ -186,18 +190,18 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   modalContainer: {
-    flex: 1, 
-    justifyContent: 'center', 
-    alignItems: 'center', 
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.5)'
   },
   modalView: {
     width: '75%',
-    height:'25%',
-    backgroundColor: 'white', 
-    padding: 20, 
-    borderRadius: 30 
-  },  
+    height: '25%',
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 30
+  },
   modalButton: {
     borderRadius: 87,
     backgroundColor: Color.sandybrown,

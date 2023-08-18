@@ -70,6 +70,7 @@ class Listing(db.Model):
     listing_description = db.Column(db.Text)
     userID = db.Column(db.Integer, db.ForeignKey('user.userID'))
     listing_location = db.Column(db.String(255))
+    locationID = db.Column(db.Integer, db.ForeignKey('listing_location.locationID'))  # Added this line
     listing_type = db.Column(db.String(50))
     adoption_fee = db.Column(db.Integer)
     listing_date = db.Column(db.Date)
@@ -83,11 +84,28 @@ class Listing(db.Model):
             'listing_description': self.listing_description,
             'userID': self.userID,
             'listing_location': self.listing_location,
+            'locationID': self.locationID,  # Added this line
             'listing_type': self.listing_type,
             'adoption_fee': self.adoption_fee,
             'listing_date': self.listing_date,
             'listing_status': self.listing_status,
             'listing_delist_date': self.listing_delist_date,
+        }
+
+class ListingLocation(db.Model):
+    locationID = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    latitude = db.Column(db.Numeric(9, 6), nullable=False)
+    longitude = db.Column(db.Numeric(9, 6), nullable=False)
+    city = db.Column(db.String(255), nullable=False)
+    state = db.Column(db.String(255), nullable=False)
+
+    def to_dict(self):
+        return {
+            'locationID': self.locationID,
+            'latitude': float(self.latitude),  # Convert to float for JSON serialization
+            'longitude': float(self.longitude),  # Convert to float for JSON serialization
+            'city': self.city,
+            'state': self.state
         }
 
 

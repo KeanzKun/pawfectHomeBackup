@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Text, StyleSheet, TouchableOpacity, View, ScrollView, TouchableHighlight, Dimensions, KeyboardAvoidingView, Platform } from "react-native";
+import {TextInput,  Text, StyleSheet, TouchableOpacity, View, ScrollView, TouchableHighlight, Dimensions, KeyboardAvoidingView, Platform } from "react-native";
 import { Button, Input } from "@rneui/themed";
 import { useNavigation } from "@react-navigation/native";
 import { Color, FontFamily } from "../GlobalStyles";
@@ -13,13 +13,21 @@ const windowHeight = Dimensions.get("window").height;
 
 const CreateListing = () => {
     const navigation = useNavigation();
-    const [animalType, setAnimalType] = useState(null);
-    const [date, setDate] = useState(new Date());
     const [show, setShow] = useState(false);
     const [hasDateBeenPicked, setHasDateBeenPicked] = useState(false);
+    const [adoptionFeeError, setAdoptionFeeError] = useState(null);
+    const [breedError, setBreedError] = useState(null);
+    const [petNameError, setPetNameError] = useState(null);
+    const [location, setLocation] = useState(null);
+
+    const [animalType, setAnimalType] = useState(null);
+    const [date, setDate] = useState(new Date());
+    const [breed, setBreed] = useState('');
     const [adoptionFee, setAdoptionFee] = useState('');
     const [listingType, setListingType] = useState('');
-    const [location, setLocation] = useState(null);
+    const [petName, setPetName] = useState('');
+    const [petGender, setPetGender] = useState('');
+    const [description, setDescription] = useState('');
 
     function dateFormatter(dateObj) {
         const yyyy = dateObj.getFullYear();
@@ -27,6 +35,26 @@ const CreateListing = () => {
         const dd = String(dateObj.getDate()).padStart(2, '0');
 
         return `${yyyy}-${mm}-${dd}`;
+    }
+
+
+    const validateInputs = () => {
+        if (!description || !animalType || !breed || !hasDateBeenPicked || !petName || adoptionFee === '' || !listingType) {
+            alert('Please fill in all fields.');
+            return false;
+        }
+
+        if (parseInt(adoptionFee) < 50 || parseInt(adoptionFee) > 400) {
+            alert('Adoption Fee needs to be between 50 and 400.');
+            return false;
+        }
+
+        if (breed.length > 30 || petName.length > 30) {
+            alert('Pet name and animal breed should not be more than 30 characters.');
+            return false;
+        }
+
+        return true;
     }
 
 
@@ -46,16 +74,16 @@ const CreateListing = () => {
             resetScrollToCoords={{ x: 0, y: 0 }}
             scrollEnabled={true}
         >
-             <TouchableOpacity
+            <TouchableOpacity
                 style={styles.backButton}
                 onPress={() => navigation.goBack()} // Navigate back to the previous screen
             >
                 <Text style={styles.backButtonText}>&lt;</Text>
             </TouchableOpacity>
-            
+
             <View style={[styles.container]}>
 
-           
+
 
                 <View style={styles.login}>
                     <View style={styles.welcomeContainer}>
@@ -86,9 +114,20 @@ const CreateListing = () => {
 
                         <Text style={styles.emailLabel}>Animal's breed</Text>
                         <Input
+                            value={breed}
+                            placeholder="ex: house cat... huskey..."
+                            onChangeText={(value) => {
+                                setBreed(value);
+                                if (value.length > 30) {
+                                    setBreedError('Breed should not exceed 30 characters.');
+                                } else {
+                                    setBreedError(null);
+                                }
+                            }}
                             required={true}
                             inputStyle={styles.usernameInput}
                         />
+                        {breedError && <Text style={styles.warningText}>{breedError}</Text>}
 
                         <Text style={styles.emailLabel}>Pet's born date</Text>
                         <TouchableOpacity
@@ -113,9 +152,34 @@ const CreateListing = () => {
 
                         <Text style={styles.emailLabel}>Pet's name</Text>
                         <Input
+                            value={petName}
+                            onChangeText={(value) => {
+                                setPetName(value);
+                                if (value.length > 30) {
+                                    setPetNameError('Pet name should not exceed 30 characters.');
+                                } else {
+                                    setPetNameError(null);
+                                }
+                            }}
                             required={true}
                             inputStyle={styles.usernameInput}
                         />
+                        {petNameError && <Text style={styles.warningText}>{petNameError}</Text>}
+
+                        <View style={styles.dropdownContainer}>
+                            <Text style={styles.emailLabel}>Pet's gender</Text>
+                            <View style={styles.pickerContainer}>
+                                <Picker
+                                    selectedValue={petGender}
+                                    itemStyle={styles.pickerItem}
+                                    onValueChange={(itemValue) => setPetGender(itemValue)}
+                                >
+                                    <Picker.Item label="Select pet's gender..." value={null} />
+                                    <Picker.Item label="Male" value="male" />
+                                    <Picker.Item label="Female" value="female" />
+                                </Picker>
+                            </View>
+                        </View>
 
                         <Text style={styles.emailLabel}>Adoption Fee</Text>
                         <View style={{ flexDirection: 'row', }}>
@@ -130,12 +194,23 @@ const CreateListing = () => {
                                 <Input
                                     required={true}
                                     value={adoptionFee}
-                                    onChangeText={text => setAdoptionFee(text.replace(/[^0-9]/g, ''))} // Allow only numbers
+                                    keyboardType="numeric"
+                                    onChangeText={text => {
+                                        const fee = text.replace(/[^0-9]/g, '');
+                                        setAdoptionFee(fee);
+
+                                        if (parseInt(fee) < 50 || parseInt(fee) > 400) {
+                                            setAdoptionFeeError('Adoption Fee needs to be between 50 and 400.');
+                                        } else {
+                                            setAdoptionFeeError(null);
+                                        }
+                                    }}
                                     inputStyle={styles.usernameInput}
                                 />
+
                             </View>
                         </View>
-
+                        {adoptionFeeError && <Text style={styles.warningText}>{adoptionFeeError}</Text>}
                         <View style={styles.dropdownContainer}>
                             <Text style={styles.emailLabel}>Listing type</Text>
                             <View style={styles.pickerContainer}>
@@ -151,9 +226,35 @@ const CreateListing = () => {
                                 </Picker>
                             </View>
                         </View>
+                        <View style={styles.dropdownContainer}>
+                            <Text style={styles.emailLabel}>Description</Text>
+                            <TextInput
+                                style={styles.descriptionInput}
+                                multiline={true} // Allow multiple lines of text
+                                numberOfLines={8} // Initial number of lines
+                                placeholder="Enter the description..."
+                                onChangeText={(text) => setDescription(text)}
+                                value={description}
+                                textAlignVertical="top" // Add this line
+                            />
+                        </View>
+
                         <TouchableHighlight
                             style={styles.loginButton}
-                            onPress={() => navigation.navigate("CreateListingLocation")}
+                            onPress={() => {
+                                if (validateInputs()) {
+                                    navigation.navigate("CreateListingLocation", {
+                                        animalType: animalType,
+                                        breed: breed,
+                                        date: date,
+                                        petName: petName,
+                                        adoptionFee: adoptionFee,
+                                        listingType: listingType,
+                                        petGender: petGender,
+                                        description: description
+                                    })
+                                }
+                            }}
                             underlayColor={Color.sandybrown}
                         >
                             <Text style={styles.loginButtonText}>Next</Text>
@@ -189,6 +290,21 @@ const styles = StyleSheet.create({
         alignItems: "center",
         zIndex: 1, // make sure the button is above other elements
     },
+    warningText: {
+        color: Color.sandybrown,
+        marginTop: windowHeight * -0.03,
+        marginLeft: windowHeight * 0.015,
+        marginBottom: windowHeight * 0.0055
+    },
+    descriptionInput: {
+        borderWidth: 1,
+        marginTop: '1%',
+        width: '95%',
+        borderColor: 'gray',
+        borderRadius: 10,
+        minHeight: 100, // Define the height that you want
+        padding: windowHeight * 0.02
+      },
     backButtonText: {
         paddingTop: windowHeight * 0.004,
         fontSize: 24,
@@ -197,7 +313,7 @@ const styles = StyleSheet.create({
     },
     selectDateButton: {
         justifyContent: 'center',
-        height: '7.5%',
+        height: '5%',
         borderRadius: 5,
         width: '95%',
         borderColor: 'gray',

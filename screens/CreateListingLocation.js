@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Text, StyleSheet, TouchableOpacity, View, ScrollView, TouchableHighlight, Dimensions, KeyboardAvoidingView, Platform } from "react-native";
+import { Image, Text, StyleSheet, TouchableOpacity, View, ScrollView, TouchableHighlight, Dimensions, KeyboardAvoidingView, Platform, ActivityIndicator } from "react-native";
 import { Button, Input } from "@rneui/themed";
 import { useNavigation } from "@react-navigation/native";
 import { Color, FontFamily } from "../GlobalStyles";
@@ -9,13 +9,22 @@ import MapView, { Marker } from 'react-native-maps';
 import { check, PERMISSIONS, RESULTS, request } from 'react-native-permissions';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import { GOOGLE_API } from "../config";
+import LinearLoadingIndicator from "../components/LinearLoadingIndicator";
 
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
+const DEFAULT_LAT = 3.1466
+const DEFAULT_LNG = 101.6958
 
-const CreateListingLocation = () => {
-    const navigation = useNavigation();
-    const [location, setLocation] = useState(null);
+const CreateListingLocation = ({ route, navigation }) => {
+    const { animalType, breed, date, petName, adoptionFee, listingType, petGender, description } = route.params;
+    const [location, setLocation] = useState({
+        latitude: DEFAULT_LAT,
+        longitude: DEFAULT_LNG,
+        city: null,
+        state: null
+    });
+
 
     const requestLocationPermission = async () => {
         try {
@@ -35,9 +44,10 @@ const CreateListingLocation = () => {
         const hasPermission = await requestLocationPermission();
         if (hasPermission) {
             Geolocation.getCurrentPosition(
-                position => {
+                async position => {
                     const { latitude, longitude } = position.coords;
-                    setLocation({ latitude, longitude });
+                    const { city, state } = await reverseGeocode(latitude, longitude);
+                    setLocation({ latitude, longitude, city, state });
                 },
                 error => console.log(error),
                 { enableHighAccuracy: false, timeout: 15000, maximumAge: 10000 }
@@ -45,6 +55,32 @@ const CreateListingLocation = () => {
         } else {
             console.log("Location permission denied");
         }
+    };
+
+    const reverseGeocode = async (latitude, longitude) => {
+        const API_URL = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${GOOGLE_API}`;
+        try {
+            const response = await fetch(API_URL);
+            const data = await response.json();
+
+            if (data.results && data.results.length > 0) {
+                const addressComponents = data.results[0].address_components;
+                let city = '';
+                let state = '';
+                addressComponents.forEach(component => {
+                    if (component.types.includes("locality")) {
+                        city = component.long_name;
+                    }
+                    if (component.types.includes("administrative_area_level_1")) {
+                        state = component.long_name;
+                    }
+                });
+                return { city, state };
+            }
+        } catch (error) {
+            console.error("Error reverse geocoding:", error);
+        }
+        return { city: null, state: null };
     };
 
     useEffect(() => {
@@ -76,13 +112,31 @@ const CreateListingLocation = () => {
                     }}
                     placeholder='Search for location...'
                     onPress={(data, details = null) => {
-                        setLocation({
-                            latitude: details.geometry.location.lat,
-                            longitude: details.geometry.location.lng
+                        const { address_components } = details;
+                        let city = '';
+                        let state = '';
+
+                        address_components.forEach(component => {
+                            if (component.types.includes("locality")) {
+                                city = component.long_name;
+                            }
+                            if (component.types.includes("administrative_area_level_1")) {
+                                state = component.long_name;
+                            }
                         });
+
+                        const newLocation = {
+                            latitude: details.geometry.location.lat,
+                            longitude: details.geometry.location.lng,
+                            city: city,
+                            state: state
+                        };
+                        setLocation(newLocation);
+                        console.log("New Location:", newLocation);
                     }}
+
                     query={{
-                        key: 'no',
+                        key: GOOGLE_API,
                         language: 'en',
                         location: location ? `${location.latitude},${location.longitude}` : null,
                         radius: 100000,  // Search within a 5km radius. Adjust as necessary.  
@@ -104,23 +158,49 @@ const CreateListingLocation = () => {
                         }}
                         onPress={(e) => {
                             const { latitude, longitude } = e.nativeEvent.coordinate;
-                            setLocation({ latitude, longitude });
+                            setLocation(prevLocation => ({ ...prevLocation, latitude, longitude }));
                         }}
+
                     >
-                        <Marker coordinate={location} />
+                        {location.latitude && location.longitude && (
+                            <Marker coordinate={location} />
+                        )}
                     </MapView>
+
                 ) : (
-                    <Text>Loading map...</Text>
+                    <View style={{ width: '100%', height: '100%', marginTop: '50%', alignItems: 'center' }}>
+                        <Image source={require('../assets/icon/cat-typing.gif')} style={{ width: '28%', height: '8%', marginBottom: '3%' }} />
+                        <Text style={{ color: Color.sandybrown, fontSize: 20 }}>Please wait while our furry staff</Text>
+                        <Text style={{ color: Color.sandybrown, fontSize: 20, marginBottom: '5%' }}>working on it...</Text>
+                        <View style={{ width: '50%', overflow: 'hidden' }}>
+                            <LinearLoadingIndicator></LinearLoadingIndicator>
+                        </View>
+                    </View>
                 )}
 
 
                 <TouchableHighlight
                     style={styles.loginButton}
-                    onPress={() => navigation.navigate("CreateListing2")}
+                    onPress={() => {
+                        console.log("Location before navigating:", location);
+
+                        navigation.navigate("CreateListing2", {
+                            animalType: animalType,
+                            breed: breed,
+                            date: date,
+                            petName: petName,
+                            adoptionFee: adoptionFee,
+                            listingType: listingType,
+                            location: location,
+                            petGender: petGender,
+                            description: description
+                        });
+                    }}
                     underlayColor={Color.sandybrown}
                 >
                     <Text style={styles.loginButtonText}>Next</Text>
                 </TouchableHighlight>
+
             </View>
             <View style={styles.redirectSignUp}>
 

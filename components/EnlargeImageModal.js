@@ -7,8 +7,6 @@ const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
 
 const EnlargeImageModal = ({ modalVisible, setModalVisible, imageUrl }) => {
-    console.log(imageUrl);
-
     return (
         <Modal
             animationType="slide"

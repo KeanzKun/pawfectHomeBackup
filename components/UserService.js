@@ -17,3 +17,15 @@ export const fetchUserDetails = async (setUserDetailsCallback) => {
         })
         .catch((error) => console.error(error));
 };
+
+export const getStoredUserID = async () => {
+    try {
+      const userID = await AsyncStorage.getItem('userID');
+      if (userID !== null) {
+        return userID; // Return the stored userID
+      }
+    } catch (error) {
+      console.error('Error fetching userID:', error);
+    }
+    return null; // Return null if userID is not found
+  };
