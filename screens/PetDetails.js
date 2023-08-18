@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Animated, BackHandler, Alert, Linking, View, Text, TouchableOpacity, Dimensions, StyleSheet, ScrollView, Image, ActivityIndicator } from 'react-native';
+import { Modal, Animated, BackHandler, Alert, Linking, View, Text, TouchableOpacity, Dimensions, StyleSheet, ScrollView, Image, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome'; // Assuming you are using FontAwesome for icons
 import { Color, FontFamily } from "../GlobalStyles";
 import { useNavigation } from '@react-navigation/native';
 import ReportListingModal from '../components/ReportListingModal';
+import EnlargeImageModal from '../components/EnlargeImageModal'
+
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -34,6 +36,7 @@ const PetDetails = ({ route }) => {
     const [userContact, setUserContact] = useState(null);
     const [modalVisible, setModalVisible] = useState(false);
     const [activeIndex, setActiveIndex] = useState(0);
+    const [imageModalVisible, setImageModalVisible] = useState(false);
     
     const handleReportListing = () => {
         setModalVisible(true);
@@ -237,11 +240,15 @@ const PetDetails = ({ route }) => {
                         }}
                     >
                         {imageUrls.map((imageUrl, index) => (
-                            <Image
-                                key={index}
-                                source={{ uri: imageUrl }}
-                                style={styles.image}
-                            />
+                            <TouchableOpacity key={index} activeOpacity={0.8} onPress={() => {
+                                setActiveIndex(index);
+                                setImageModalVisible(true);
+                            }}>
+                                <Image
+                                    source={{ uri: imageUrl }}
+                                    style={styles.image}
+                                />
+                            </TouchableOpacity>
                         ))}
                     </Swiper>
 
@@ -326,6 +333,8 @@ const PetDetails = ({ route }) => {
                     </View>
                     <ReportListingModal modalVisible={modalVisible} setModalVisible={setModalVisible} onSubmit={submitReport} />
                 </ScrollView>
+                <EnlargeImageModal modalVisible={imageModalVisible} setModalVisible={setImageModalVisible} imageUrl={imageUrls[activeIndex]} />
+
             </View>
         );
     }

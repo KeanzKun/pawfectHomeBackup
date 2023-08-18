@@ -13,11 +13,12 @@ const windowHeight = Dimensions.get("window").height;
 
 const CreateListing = () => {
     const navigation = useNavigation();
-    const [reportReason, setReportReason] = useState(null);
+    const [animalType, setAnimalType] = useState(null);
     const [date, setDate] = useState(new Date());
     const [show, setShow] = useState(false);
     const [hasDateBeenPicked, setHasDateBeenPicked] = useState(false);
     const [adoptionFee, setAdoptionFee] = useState('');
+    const [listingType, setListingType] = useState('');
     const [location, setLocation] = useState(null);
 
     function dateFormatter(dateObj) {
@@ -58,11 +59,11 @@ const CreateListing = () => {
                             <Text style={styles.emailLabel}>Animal type</Text>
                             <View style={styles.pickerContainer}>
                                 <Picker
-                                    selectedValue={reportReason}
+                                    selectedValue={animalType}
                                     itemStyle={styles.pickerItem}
-                                    onValueChange={(itemValue) => setReportReason(itemValue)}
+                                    onValueChange={(itemValue) => setAnimalType(itemValue)}
                                 >
-                                    <Picker.Item label="Select anime type..." value={null} />
+                                    <Picker.Item label="Select animal type..." value={null} />
                                     <Picker.Item label="Cat" value="Cat" />
                                     <Picker.Item label="Dog" value="Dog" />
                                     <Picker.Item label="Bird" value="Bird" />
@@ -126,12 +127,21 @@ const CreateListing = () => {
                             </View>
                         </View>
 
-                        <Text style={styles.emailLabel}>Listing type</Text>
-                        <Input
-                            required={true}
-                            inputStyle={styles.usernameInput}
-                        />
-
+                        <View style={styles.dropdownContainer}>
+                            <Text style={styles.emailLabel}>Listing type</Text>
+                            <View style={styles.pickerContainer}>
+                                <Picker
+                                    selectedValue={listingType}
+                                    itemStyle={styles.pickerItem}
+                                    onValueChange={(itemValue) => setListingType(itemValue)}
+                                >
+                                    <Picker.Item label="Select listing type..." value={null} />
+                                    <Picker.Item label="Adopt" value="adopt" />
+                                    <Picker.Item label="Re-Home" value="re-home" />
+                                    <Picker.Item label="Missing" value="missing" />
+                                </Picker>
+                            </View>
+                        </View>
                         <TouchableHighlight
                             style={styles.loginButton}
                             onPress={() => navigation.navigate("CreateListingLocation")}

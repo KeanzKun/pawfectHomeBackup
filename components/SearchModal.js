@@ -57,8 +57,12 @@ const SearchModal = ({ modalVisible, setModalVisible, onSearch }) => {
                     selectedValue={petType}
                     onValueChange={(itemValue) => setPetType(itemValue)}>
                     <Picker.Item label="Select a pet type..." value={null} />
-                    <Picker.Item label="Cat" value="cat" />
-                    <Picker.Item label="Dog" value="dog" />
+                    <Picker.Item label="Cat" value="Cat" />
+                    <Picker.Item label="Dog" value="Dog" />
+                    <Picker.Item label="Bird" value="Bird" />
+                    <Picker.Item label="Hamster" value="Hamster" />
+                    <Picker.Item label="Reptile" value="Reptile" />
+                    <Picker.Item label="Furry" value="Furry" />
 
                   </Picker>
                 </View>
