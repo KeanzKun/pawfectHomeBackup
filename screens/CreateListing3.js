@@ -29,7 +29,7 @@ const CreateListing3 = () => {
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.login}>
         <View style={styles.welcomeContainer}>
-          <Text style={styles.welcomeBackText}>All Set!</Text>
+          <Text style={styles.welcomeBackText}>Pawfect!</Text>
           <Text style={styles.loginToContinueText}>You may view your listing in</Text>
           <Text style={styles.loginToContinueText}>Account Setting -&gt; Listing</Text>
         </View>

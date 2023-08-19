@@ -55,7 +55,6 @@ class Pets(db.Model):
     pet_age = db.Column(db.Date)
     pet_gender = db.Column(db.String(10))
     pet_breed = db.Column(db.String(50))
-    availablity_status = db.Column(db.String(50))
     pet_photo = db.Column(db.String(255))
 
     def to_dict(self):
@@ -66,7 +65,6 @@ class Pets(db.Model):
             'pet_age': self.pet_age,
             'pet_gender': self.pet_gender,
             'pet_breed': self.pet_breed,
-            'availablity_status': self.availablity_status,
             'pet_photo': self.pet_photo
         }
 

@@ -259,7 +259,6 @@ const PetDetails = ({ route }) => {
                         ))}
                     </Swiper>
 
-
                     <View key={1} style={styles.detailsContainer}>
                         <Text style={styles.petName}>
                             {petDetails.pet.pet_name} <MaterialCommunityIcons name={gender} color='#900' size={25} />

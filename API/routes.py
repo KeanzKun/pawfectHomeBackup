@@ -622,7 +622,6 @@ def add_pet():
         pet_gender=data['pet_gender'],
         pet_breed=data['pet_breed'],
         pet_photo=data['pet_photo'],
-        availablity_status="Available"  # Defaulting to Available
     )
     db.session.add(new_pet)
     db.session.commit()

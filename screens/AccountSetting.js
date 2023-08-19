@@ -4,6 +4,7 @@ import { Button, Input } from "@rneui/themed";
 import { useNavigation } from "@react-navigation/native";
 import { Color, FontFamily } from "../GlobalStyles";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
@@ -54,8 +55,11 @@ const AccountSetting = () => {
             <View style={styles.titleContainer}>
                 <Text style={styles.titleText}>Account Setting</Text>
             </View>
+            <View style={{ width: '100%', alignContent: 'center', alignItems: 'center', justifyContent: 'center' }}>
+                <MaterialCommunityIcons name="dog" color={Color.dimgray} size={150} />
+            </View>
+            <View style={{ flex: 0.6 }}></View>
 
-            <View style={{ flex: 1 }}></View>
             <View style={styles.buttonFrame}>
                 <View style={styles.buttonContainer}>
                     <TouchableOpacity
@@ -103,7 +107,7 @@ const AccountSetting = () => {
             <View style={{ flex: 2 }}>
                 <TouchableOpacity
                     style={styles.button}
-                    onPress={ () => {
+                    onPress={() => {
                         navigation.navigate('DeleteAccount');
                     }}
                     underlayColor={Color.transparent}
@@ -181,6 +185,7 @@ const styles = StyleSheet.create({
     titleContainer: {
         flex: 1,
         paddingVertical: windowHeight * 0.025,
+        marginBottom: '-10%',
     },
     titleText: {
         fontSize: 39,

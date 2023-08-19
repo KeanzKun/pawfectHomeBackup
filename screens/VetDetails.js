@@ -5,6 +5,7 @@ import { Color, FontFamily } from "../GlobalStyles";
 import { useNavigation } from '@react-navigation/native';
 import { SERVER_ADDRESS } from '../config';
 import MapView, { Marker } from 'react-native-maps';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
@@ -38,6 +39,33 @@ const VetDetails = ({ route }) => {
 
         Linking.openURL(url);
     }
+
+    const directEmail = async () => {
+        const email = vetDetails.vet_email;
+
+        try {
+            const query = encodeURIComponent(email);
+            const url = `mailto:${query}`;
+            await Linking.openURL(url);
+        } catch (error) {
+            // Handle the error as needed, such as logging it or displaying an alert
+            console.error('An error occurred:', error);
+            Alert.alert('Error', 'Unable to open the URL');
+        }
+    };
+
+    const directCall = async () => {
+        const phoneNumber = vetDetails.vet_contact;
+
+        try {
+            const url = `tel:${phoneNumber}`;
+            await Linking.openURL(url);
+        } catch (error) {
+            // Handle the error as needed, such as logging it or displaying an alert
+            console.error('An error occurred:', error);
+            Alert.alert('Error', 'Unable to open the URL');
+        }
+    };
 
     useEffect(() => {
         // Handle the back button press event
@@ -144,11 +172,19 @@ const VetDetails = ({ route }) => {
                         <View style={styles.contactContainer}>
                             <Text style={[styles.title, { fontSize: 28, marginTop: '-10%' }]}>Contact The Vet</Text>
                             <View style={styles.contactButtons}>
-                                <TouchableOpacity style={styles.contactButton}>
-                                    <Icon name="phone" size={20} color="#900" />
+                                <TouchableOpacity style={styles.contactButton}
+                                    onPress={() => {
+                                        directEmail();
+                                    }}
+                                >
+                                    <MaterialCommunityIcons name="email-outline" color='#900' size={30} />
                                 </TouchableOpacity>
-                                <TouchableOpacity style={styles.contactButton}>
-                                    <Icon name="envelope" size={20} color="#900" />
+                                <TouchableOpacity style={styles.contactButton}
+                                    onPress={() => {
+                                        directCall();
+                                    }}
+                                >
+                                    <MaterialCommunityIcons name="phone" color='#900' size={30} />
                                 </TouchableOpacity>
                             </View>
                         </View>
