@@ -7,22 +7,16 @@ import GestureRecognizer from 'react-native-swipe-gestures';
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
 
-const SearchModal = ({ modalVisible, setModalVisible, onSearch }) => {
+const SearchVetModal = ({ modalVisible, setModalVisible, onSearch }) => {
   // Declare state variables for each picker's selected value
-  const [petType, setPetType] = useState(null);
-  const [status, setStatus] = useState(null);
-  const [age, setAge] = useState(null);
-  const [location, setLocation] = useState(null);
+  const [vetState, setVetState] = useState(null);
 
   const clearFilters = () => {
-    setPetType(null);
-    setStatus(null);
-    setAge(null);
-    setLocation(null);
+    setVetState(null);
   };
 
   const handleSearch = () => {
-    onSearch({ petType, status, age, location }); // pass the selected values to the parent component
+    onSearch({ vetState }); // pass the selected values to the parent component
     setModalVisible(false);
   };
 
@@ -52,50 +46,10 @@ const SearchModal = ({ modalVisible, setModalVisible, onSearch }) => {
                   </TouchableOpacity>
                 </View>
                 <View style={styles.dropdownContainer}>
-                  <Text style={styles.pickerTitleText}>Pet Type</Text>
+                  <Text style={styles.pickerTitleText}>State</Text>
                   <Picker
-                    selectedValue={petType}
-                    onValueChange={(itemValue) => setPetType(itemValue)}>
-                    <Picker.Item label="Select a pet type..." value={null} />
-                    <Picker.Item label="Cat" value="Cat" />
-                    <Picker.Item label="Dog" value="Dog" />
-                    <Picker.Item label="Bird" value="Bird" />
-                    <Picker.Item label="Hamster" value="Hamster" />
-                    <Picker.Item label="Reptile" value="Reptile" />
-                    <Picker.Item label="Furry" value="Furry" />
-
-                  </Picker>
-                </View>
-                <View style={styles.dropdownContainer}>
-                  <Text style={styles.pickerTitleText}>Status</Text>
-                  <Picker
-                    selectedValue={status}
-                    onValueChange={(itemValue) => setStatus(itemValue)}>
-                    <Picker.Item label="Select a status..." value={null} />
-                    <Picker.Item label="Re-Home" value="reHome" />
-                    <Picker.Item label="Adopt" value="adopt" />
-
-                  </Picker>
-                </View>
-                <View style={styles.dropdownContainer}>
-                  <Text style={styles.pickerTitleText}>Age</Text>
-                  <Picker
-                    selectedValue={age}
-                    onValueChange={(itemValue) => setAge(itemValue)}>
-                    <Picker.Item label="Select age range..." value={null} />
-                    <Picker.Item label="Less than 1 year" value="1" />
-                    <Picker.Item label="1 - 3 years old" value="3" />
-                    <Picker.Item label="4 - 6 years old" value="6" />
-                    <Picker.Item label="7 - 10 years old" value="10" />
-                    <Picker.Item label="at least 10 years old" value=">10" />
-                  </Picker>
-                </View>
-                <View style={styles.dropdownContainer}>
-                  <Text style={styles.pickerTitleText}>Location</Text>
-                  <Picker
-                    selectedValue={location}
-                    onValueChange={(itemValue) => setLocation(itemValue)}>
-                    <Picker.Item label="Select a location..." value={null} />
+                    selectedValue={vetState}
+                    onValueChange={(itemValue) => setVetState(itemValue)}>
                     <Picker.Item label="Select state to search..." value={null} />
                     <Picker.Item label="Johor" value="Johor" />
                     <Picker.Item label="Kedah" value="Kedah" />
@@ -149,7 +103,7 @@ const styles = StyleSheet.create({
   modalView: {
     backgroundColor: "white",
     width: '100%',
-    height: '70%',
+    height: '40%',
     Top: '10%',
     borderTopLeftRadius: windowHeight * 0.05,
     borderTopRightRadius: windowHeight * 0.05,
@@ -186,7 +140,7 @@ const styles = StyleSheet.create({
     marginBottom: '15%',
   },
   dropdownContainer: {
-    marginBottom: '3%',
+    marginBottom: '10%',
     alignSelf: 'stretch',
   },
   header: {
@@ -301,4 +255,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SearchModal;
+export default SearchVetModal;

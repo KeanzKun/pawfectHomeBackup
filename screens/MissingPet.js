@@ -35,7 +35,22 @@ const MissingPetScreen = () => {
     try {
       const response = await fetch(`${SERVER_ADDRESS}/api/listings/missing`);
       const json = await response.json();
-      setData(json);
+
+      const updatedData = await Promise.all(json.map(async item => {
+        if (item.listing.locationID) {
+          try {
+            const locationResponse = await fetch(`${SERVER_ADDRESS}/api/listing-location/${item.listing.locationID}`);
+            const locationData = await locationResponse.json();
+            item.listing.locationDetails = locationData;
+          } catch (error) {
+            console.error("Error fetching location details:", error);
+          }
+        }
+        return item;
+      }));
+
+      setData(updatedData);
+
     } catch (error) {
       console.error(error);
     } finally {
@@ -51,6 +66,7 @@ const MissingPetScreen = () => {
   }, [fetchData]);
 
   const renderItem = ({ item }) => {
+    const locationCity = item.listing.locationDetails ? item.listing.locationDetails.city : "Unknown Location";
     if (!item.pet.pet_photo) return null;  // Guard clause
 
     const firstPhoto = item.pet.pet_photo.split(';')[0];
@@ -60,7 +76,7 @@ const MissingPetScreen = () => {
 
     return (
       <TouchableOpacity style={styles.item}
-        onPress={() => navigation.navigate("MissingPetDetails", { listingID: item.listing.listingID, petAge: petAge })}>
+        onPress={() => navigation.navigate("MissingPetDetails", { listingID: item.listing.listingID, petAge: petAge, locationDetails: item.listing.locationDetails })}>
         <Image source={{ uri: imageUrl }} style={styles.itemImage} />
         <View style={styles.itemTextContainer}>
           <View style={{ flexDirection: 'row' }}>
@@ -69,6 +85,7 @@ const MissingPetScreen = () => {
           </View>
           <TextStroke stroke="#533e41" strokeWidth={0.1} style={styles.itemText}>{item.pet.pet_breed}</TextStroke>
           <TextStroke stroke="#533e41" strokeWidth={0.1} style={styles.itemText}>{petAge}</TextStroke>
+          <TextStroke stroke="#533e41" strokeWidth={0.1} style={styles.itemText}>{locationCity}</TextStroke>
         </View>
       </TouchableOpacity>
     );

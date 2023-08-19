@@ -5,6 +5,7 @@ import { Color, FontFamily } from "../GlobalStyles";
 import { useNavigation } from '@react-navigation/native';
 import { SERVER_ADDRESS } from '../config';
 import Swiper from 'react-native-swiper';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
@@ -45,7 +46,10 @@ const PetListingDetails = ({ route }) => {
         }
     }, [petDetails]); // Dependency on petDetails
 
-
+    function capitalizeFirstLetter(string) {
+        return string.charAt(0).toUpperCase() + string.slice(1);
+    }
+    
     useEffect(() => {
         // Handle the back button press event
         const handleBackPress = () => {
@@ -69,6 +73,18 @@ const PetListingDetails = ({ route }) => {
                 const listingID = route.params.listingID;
                 const response = await fetch(`${SERVER_ADDRESS}/api/listings/${listingID}`);
                 const json = await response.json();
+
+                // Fetch location details
+                if (json.listing.locationID) {
+                    try {
+                        const locationResponse = await fetch(`${SERVER_ADDRESS}/api/listing-location/${json.listing.locationID}`);
+                        const locationData = await locationResponse.json();
+                        json.listing.locationDetails = locationData;
+                    } catch (error) {
+                        console.error("Error fetching location details:", error);
+                    }
+                }
+
                 setPetDetails(json);
                 const fullDescription = json.listing.listing_description;
                 const description = fullDescription.slice(0, 300);
@@ -83,7 +99,6 @@ const PetListingDetails = ({ route }) => {
         fetchPetDetails();
 
     }, []);
-
 
     const updateListingStatus = async (status) => {
         const listingID = petDetails.listing.listingID; // Get the listing ID from the petDetails
@@ -145,6 +160,10 @@ const PetListingDetails = ({ route }) => {
         const imageUrls = imageFilenames.map(filename => `${SERVER_ADDRESS}/api/pets/pet_image/${filename}`);
         const { petAge } = route.params;
         const formattedDate = formatDate(petDetails.listing.listing_date);
+        const locationCity = petDetails.listing.locationDetails ? petDetails.listing.locationDetails.city : "Unknown Location";
+        const locationState = petDetails.listing.locationDetails ? petDetails.listing.locationDetails.state : "Unknown Location";
+        const petType = capitalizeFirstLetter(petDetails.pet.pet_type)
+
         return (
 
             <View style={{ flex: 1 }}>
@@ -193,10 +212,18 @@ const PetListingDetails = ({ route }) => {
                         <Text style={styles.petName}>
                             {petDetails.pet.pet_name} <Icon name="venus" size={20} color="#900" />
                         </Text>
-                        <Text style={styles.detailText}>{petDetails.pet.pet_type}</Text>
-                        <Text style={styles.detailText}>{petDetails.pet.pet_breed}</Text>
-                        <Text style={styles.detailText}>Age: {petAge}</Text>
-                        <Text style={styles.detailText}>Location: {petDetails.listing.listing_location}</Text>
+                        <View style={{ flexDirection: 'row', marginBottom: '2%' }}>
+                            <MaterialCommunityIcons name="paw" color='#900' size={20} />
+                            <Text style={styles.detailText}>{petType}, {petDetails.pet.pet_breed}</Text>
+                        </View>
+                        <View style={{ flexDirection: 'row', marginBottom: '2%' }}>
+                            <MaterialCommunityIcons name="calendar-blank-outline" color='#900' size={20} />
+                            <Text style={styles.detailText}>{petAge}</Text>
+                        </View>
+                        <View style={{ flexDirection: 'row', marginBottom: '2%' }}>
+                            <MaterialCommunityIcons name="map-marker" color='#900' size={20} />
+                            <Text style={styles.detailText}>{locationCity}, {locationState}</Text>
+                        </View>
                     </View>
 
                     <View style={styles.titleContainer}>
@@ -356,6 +383,7 @@ const styles = StyleSheet.create({
         marginTop: windowHeight * - 0.01
     },
     detailText: {
+        marginLeft: '2%',
         fontSize: 15,
     },
     contactContainer: {

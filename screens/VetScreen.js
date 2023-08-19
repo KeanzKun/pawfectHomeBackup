@@ -2,34 +2,47 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, Button, FlatList, Image, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { Color, FontFamily } from "../GlobalStyles";
 import { useNavigation } from '@react-navigation/native';
-import { SERVER_ADDRESS } from '../config'; 
+import { SERVER_ADDRESS } from '../config';
+import SearchVetModal from '../components/SearchVetModal';
 
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
 
 const VetScreen = () => {
   const navigation = useNavigation();
-  const [data, setData] = useState([]); // Initializing state to hold vet data
+  const [data, setData] = useState([]);
+  const [modalVisible, setModalVisible] = useState(false); // For modal visibility
 
   useEffect(() => {
+    fetchVets();
+  }, []);
 
+  const fetchVets = (state = null) => {
     let url = `${SERVER_ADDRESS}/api/vets`;
-    console.log(url);
-    // Fetching vet data from the API
+    if (state) {
+      url += `?vet_state=${state}`;
+    }
     fetch(url)
       .then((response) => response.json())
       .then((json) => setData(json))
       .catch((error) => console.error(error));
-      }, []);
+  };
 
+  const handleSearch = (filters) => {
+    if (filters.vetState) {
+      fetchVets(filters.vetState);
+    } else {
+      fetchVets();
+    }
+  };
 
   const renderItem = ({ item }) => (
     <TouchableOpacity style={styles.item}
-      onPress={() => navigation.navigate("VetDetails" , {vetID: item.vetID})}>
+      onPress={() => navigation.navigate("VetDetails", { vetID: item.vetID })}>
       <View style={styles.itemTextContainer}>
-        <Text style={styles.itemText}>{item.vet_name}</Text> 
-        <Text style={styles.itemSubText}>{item.vet_hours}</Text> 
-        <Text style={styles.itemSubText}>{item.vet_address}</Text> 
+        <Text style={styles.itemText}>{item.vet_name}</Text>
+        <Text style={styles.itemSubText}>{item.vet_hours}</Text>
+        <Text style={styles.itemSubText}>{item.vet_address}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -38,17 +51,23 @@ const VetScreen = () => {
     <View style={styles.container}>
       <Text style={styles.titleText}>Pawfect Home.</Text>
       <View style={styles.searchContainer}>
-        <TextInput style={styles.searchInput} placeholder="Search" />
+        <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.searchButton}>
+          <Text style={styles.searchText}>Search</Text>
+        </TouchableOpacity>
       </View>
       <FlatList
-        data={data} // Updated to use state data
+        data={data}
         renderItem={renderItem}
-        keyExtractor={item => item.vetID.toString()} // Updated to match the API response
+        keyExtractor={item => item.vetID.toString()}
+      />
+      <SearchVetModal
+        modalVisible={modalVisible}
+        setModalVisible={setModalVisible}
+        onSearch={handleSearch}
       />
     </View>
   );
 };
-
 
 const styles = StyleSheet.create({
   container: {
@@ -74,6 +93,20 @@ const styles = StyleSheet.create({
   categoriesContainer: {
     marginVertical: windowHeight * 0.01,
     width: windowWidth * 0.9,
+  },
+  searchButton: {
+    backgroundColor: 'white',
+    width: '100%',
+    height: windowHeight * 0.06,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    paddingHorizontal: windowWidth * 0.04,
+    borderRadius: 30,
   },
   button: {
     backgroundColor: 'white',
@@ -152,7 +185,11 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     alignItems: 'flex-start',
   },
-
+  searchText: {
+    alignSelf: 'flex-start',
+    fontWeight: '400',
+    fontSize: 13,
+  },
 });
 
 export default VetScreen;

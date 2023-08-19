@@ -3,46 +3,57 @@ import { BackHandler, Alert, Linking, ScrollView, View, Text, Image, StyleSheet,
 import Icon from 'react-native-vector-icons/FontAwesome'; // Assuming you are using FontAwesome for icons
 import { Color, FontFamily } from "../GlobalStyles";
 import { useNavigation } from '@react-navigation/native';
-import { SERVER_ADDRESS } from '../config'; 
-
-import MapView from 'react-native-maps';
-
+import { SERVER_ADDRESS } from '../config';
+import MapView, { Marker } from 'react-native-maps';
 
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
 
 const VetDetails = ({ route }) => {
     const navigation = useNavigation();
+    const vetID = route.params.vetID;
     const [vetDetails, setVetDetails] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
 
     const searchVetOnGoogle = async () => {
         try {
-          const query = encodeURIComponent(vetDetails.vet_name);
-          const url = `https://www.google.com/search?q=${query}`;
-          await Linking.openURL(url);
+            const query = encodeURIComponent(vetDetails.vet_name);
+            const url = `https://www.google.com/search?q=${query}`;
+            await Linking.openURL(url);
         } catch (error) {
-          // Handle the error as needed, such as logging it or displaying an alert
-          console.error('An error occurred:', error);
-          Alert.alert('Error', 'Unable to open the URL');
+            // Handle the error as needed, such as logging it or displaying an alert
+            console.error('An error occurred:', error);
+            Alert.alert('Error', 'Unable to open the URL');
         }
-      };
+    };
 
-      useEffect(() => {
+    const openInGoogleMaps = () => {
+        const latitude = vetDetails.vet_latitude;
+        const longitude = vetDetails.vet_longitude;
+        const label = vetDetails.vet_name;
+        const url = Platform.select({
+            ios: `maps://app?daddr=${latitude}+${longitude}+&q=${label}`,
+            android: `geo:${latitude},${longitude}?q=${label}`
+        });
+
+        Linking.openURL(url);
+    }
+
+    useEffect(() => {
         // Handle the back button press event
         const handleBackPress = () => {
-          navigation.goBack(); // Exit the app
-          return true; // Prevent default behavior
+            navigation.goBack(); // Exit the app
+            return true; // Prevent default behavior
         };
-    
+
         // Add the event listener
         BackHandler.addEventListener('hardwareBackPress', handleBackPress);
-    
+
         // Return a cleanup function to remove the event listener
         return () => {
-          BackHandler.removeEventListener('hardwareBackPress', handleBackPress);
+            BackHandler.removeEventListener('hardwareBackPress', handleBackPress);
         };
-      }, []);
+    }, []);
 
 
     useEffect(() => {
@@ -50,7 +61,6 @@ const VetDetails = ({ route }) => {
         const fetchPetDetails = async () => {
             try {
                 setIsLoading(true);
-                const vetID = route.params.vetID;
                 const response = await fetch(`${SERVER_ADDRESS}/api/vets/${vetID}`);
                 const json = await response.json();
                 setVetDetails(json[0]);
@@ -73,62 +83,79 @@ const VetDetails = ({ route }) => {
     } else {
         return (
 
-            <View style={{ flex: 1 }}>
+            <ScrollView>
+                <View style={{ flex: 1 }}>
 
-                <TouchableOpacity
-                    style={styles.backButton}
-                    onPress={() => navigation.goBack()} // Navigate back to the previous screen
-                >
-                    <Text style={styles.backButtonText}>&lt;</Text>
-                </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.backButton}
+                        onPress={() => navigation.goBack()} // Navigate back to the previous screen
+                    >
+                        <Text style={styles.backButtonText}>&lt;</Text>
+                    </TouchableOpacity>
 
-                <View style={styles.container}>
+                    <View style={styles.container}>
 
-                    <View style={styles.titleContainer}>
-                        <Text style={[styles.title, { fontSize: 30 }]}>Vet Info</Text>
-                    </View>
+                        <View style={styles.titleContainer}>
+                            <Text style={[styles.title, { fontSize: 30 }]}>Vet Info</Text>
+                        </View>
 
-                    <View style={styles.detailsContainer}>
-                        <Text style={styles.petName}>
-                            {vetDetails.vet_name}
-                        </Text>
-                        <Text style={styles.detailText}>{vetDetails.vet_hours}</Text>
-                        <Text style={styles.detailText}>{vetDetails.vet_address}</Text>
-                        <TouchableOpacity onPress={searchVetOnGoogle}>
-                            <Text style={[styles.detailText, { color: Color.sandybrown }]}>Search on Google</Text>
-                        </TouchableOpacity>
-                    </View>
-
-                    <View style={styles.titleContainer}>
-                        <Text style={styles.title}>Map</Text>
-                    </View>
-
-                    {/* <View style={styles.mapContainer}>
-                    <MapView
-                        style={styles.map}
-                        initialRegion={{
-                            latitude: 3.0398166774778406,  // your initial latitude
-                            longitude: 101.79421613345548, // your initial longitude
-                            latitudeDelta: 0.0922,
-                            longitudeDelta: 0.0421,
-                        }}
-                    />
-                </View> */}
-
-                    <View style={styles.contactContainer}>
-                        <Text style={[styles.title, { fontSize: 28 }]}>Contact The Vet</Text>
-                        <View style={styles.contactButtons}>
-                            <TouchableOpacity style={styles.contactButton}>
-                                <Icon name="phone" size={20} color="#900" />
-                            </TouchableOpacity>
-                            <TouchableOpacity style={styles.contactButton}>
-                                <Icon name="envelope" size={20} color="#900" />
+                        <View style={styles.detailsContainer}>
+                            <Text style={styles.petName}>
+                                {vetDetails.vet_name}
+                            </Text>
+                            <Text style={styles.detailText}>{vetDetails.vet_hours}</Text>
+                            <Text style={styles.detailText}>{vetDetails.vet_address}</Text>
+                            <TouchableOpacity onPress={searchVetOnGoogle}>
+                                <Text style={[styles.detailText, { color: Color.sandybrown }]}>Search on Google</Text>
                             </TouchableOpacity>
                         </View>
-                    </View>
 
+                        <View style={styles.titleContainer}>
+                            <Text style={styles.title}>Map</Text>
+                        </View>
+
+                        <View style={styles.mapContainer}>
+                            <View style={styles.mapContainer}>
+                                <TouchableOpacity onPress={openInGoogleMaps} style={{ height: '100%', width: '100%' }}>
+                                    <MapView
+                                        style={styles.map}
+                                        initialRegion={{
+                                            latitude: vetDetails.vet_latitude,
+                                            longitude: vetDetails.vet_longitude,
+                                            latitudeDelta: 0.0122,
+                                            longitudeDelta: 0.0061,
+                                        }}
+                                        zoomEnabled={false}
+                                        scrollEnabled={false}
+                                        rotateEnabled={false}
+                                        pitchEnabled={false}
+                                    >
+                                        <Marker
+                                            coordinate={{
+                                                latitude: vetDetails.vet_latitude,
+                                                longitude: vetDetails.vet_longitude
+                                            }}
+                                            title={vetDetails.vet_name}
+                                        />
+                                    </MapView>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                        <View style={styles.contactContainer}>
+                            <Text style={[styles.title, { fontSize: 28, marginTop: '-10%' }]}>Contact The Vet</Text>
+                            <View style={styles.contactButtons}>
+                                <TouchableOpacity style={styles.contactButton}>
+                                    <Icon name="phone" size={20} color="#900" />
+                                </TouchableOpacity>
+                                <TouchableOpacity style={styles.contactButton}>
+                                    <Icon name="envelope" size={20} color="#900" />
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+
+                    </View>
                 </View>
-            </View>
+            </ScrollView>
         );
     }
 };
@@ -183,7 +210,7 @@ const styles = StyleSheet.create({
         marginVertical: windowHeight * 0.05,
     },
     detailsContainer: {
-        height: windowHeight * 0.21,
+        height: windowHeight * 0.23,
         marginHorizontal: windowHeight * 0.03,
         paddingVertical: windowHeight * 0.03,
         backgroundColor: 'white',
@@ -226,7 +253,7 @@ const styles = StyleSheet.create({
     },
     mapContainer: {
         height: windowHeight * 0.3, // adjust the height as you need
-        width: '90%',
+        width: '93%',
         alignSelf: 'center',
         justifyContent: 'center',
         alignItems: 'center',
@@ -234,7 +261,9 @@ const styles = StyleSheet.create({
     },
 
     map: {
-        ...StyleSheet.absoluteFillObject,
+        marginTop: '-10%',
+        height: '100%',
+        width: '100%',
     },
 
 });

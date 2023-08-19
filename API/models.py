@@ -12,6 +12,9 @@ class Vet(db.Model):
     vet_contact = db.Column(db.String(255))
     vet_email = db.Column(db.String(255))
     vet_hours = db.Column(db.String(255))
+    vet_latitude = db.Column(db.Numeric(10, 8))  # Decimal column for latitude
+    vet_longitude = db.Column(db.Numeric(11, 8))  # Decimal column for longitude
+    vet_state = db.Column(db.String(255))  # New column for state
 
     def to_dict(self):
         return {
@@ -20,8 +23,12 @@ class Vet(db.Model):
             'vet_address': self.vet_address,
             'vet_contact': self.vet_contact,
             'vet_email': self.vet_email,
-            'vet_hours': self.vet_hours
+            'vet_hours': self.vet_hours,
+            'vet_latitude': float(self.vet_latitude) if self.vet_latitude else None,  # Convert to float for JSON serialization
+            'vet_longitude': float(self.vet_longitude) if self.vet_longitude else None,  # Convert to float for JSON serialization
+            'vet_state': self.vet_state
         }
+
 
 
 class User(db.Model):
@@ -69,7 +76,6 @@ class Listing(db.Model):
     petID = db.Column(db.Integer, db.ForeignKey('pets.petID'))
     listing_description = db.Column(db.Text)
     userID = db.Column(db.Integer, db.ForeignKey('user.userID'))
-    listing_location = db.Column(db.String(255))
     locationID = db.Column(db.Integer, db.ForeignKey('listing_location.locationID'))  # Added this line
     listing_type = db.Column(db.String(50))
     adoption_fee = db.Column(db.Integer)
@@ -83,7 +89,6 @@ class Listing(db.Model):
             'petID': self.petID,
             'listing_description': self.listing_description,
             'userID': self.userID,
-            'listing_location': self.listing_location,
             'locationID': self.locationID,  # Added this line
             'listing_type': self.listing_type,
             'adoption_fee': self.adoption_fee,

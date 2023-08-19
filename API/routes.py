@@ -257,8 +257,15 @@ def register():
 
 @app.route('/api/vets', methods=['GET'])
 def get_vets():
-    vets = Vet.query.all()
+    vet_state = request.args.get('vet_state')
+    
+    if vet_state:
+        vets = Vet.query.filter_by(vet_state=vet_state).all()
+    else:
+        vets = Vet.query.all()
+    
     return jsonify([vet.to_dict() for vet in vets]), 200
+
 
 @app.route('/api/vets/<int:vetID>', methods=['GET'])
 def get_vet(vetID):
@@ -290,7 +297,8 @@ def update_listing_status(listingID):
         return jsonify({'message': 'Listing status updated successfully'}), 200
     else:
         return jsonify({'message': 'Listing not found'}), 404
-    
+
+
 @app.route('/api/update-userName', methods=['POST'])
 def update_user():
     user_data = request.json
@@ -405,6 +413,13 @@ def get_pet(petID):
 def serve_pet_image(filename):
     return send_from_directory('C:\\Users\\kean5\\OneDrive\\Desktop\\Degree\\FYP\\React\\PawfectHomeTest\\assets\\pet_image', filename)
 
+@app.route('/api/listing-location/<int:locationID>', methods=['GET'])
+def get_listing_location(locationID):
+    location = ListingLocation.query.get(locationID)
+    if location is None:
+        return jsonify({'error': 'Location not found'}), 404
+    return jsonify(location.to_dict()), 200
+
 @app.route('/api/listings', methods=['GET'])
 def get_listings():
     listings = Listing.query.filter(Listing.listing_status == 'active', Listing.listing_type != 'missing').all()
@@ -424,17 +439,18 @@ def search_listings():
     pet_type = request.args.get('petType')
     status = request.args.get('status')
     age = request.args.get('age')
-    location = request.args.get('location')
+    location_state = request.args.get('location')  # Renamed to location_state for clarity
 
-    query = db.session.query(Listing, Pets).join(Pets, Listing.petID == Pets.petID)
+    # Join with ListingLocation table
+    query = db.session.query(Listing, Pets, ListingLocation).join(Pets, Listing.petID == Pets.petID).join(ListingLocation, Listing.locationID == ListingLocation.locationID)
     query = query.filter(Listing.listing_status == 'active', Listing.listing_type != 'missing')
 
     if pet_type:
         query = query.filter(Pets.pet_type == pet_type)
     if status:
         query = query.filter(Listing.listing_type == status)
-    if location:
-        query = query.filter(Listing.listing_location == location)
+    if location_state:
+        query = query.filter(ListingLocation.state == location_state)  # Filter by state
 
     # Execute the query
     results = query.all()
@@ -442,29 +458,31 @@ def search_listings():
     # Filter results based on age
     if age:
         filtered_results = []
-        for listing, pet in results:
+        for listing, pet, location in results:  # Added location to unpacking
             pet_age = get_years_from_date(str(pet.pet_age))
             if age == '1' and pet_age < 1:
-                filtered_results.append((listing, pet))
+                filtered_results.append((listing, pet, location))
             elif age == '3' and 1 <= pet_age <= 3:
-                filtered_results.append((listing, pet))
+                filtered_results.append((listing, pet, location))
             elif age == '6' and 4 <= pet_age <= 6:
-                filtered_results.append((listing, pet))
+                filtered_results.append((listing, pet, location))
             elif age == '10' and 7 <= pet_age <= 10:
-                filtered_results.append((listing, pet))
+                filtered_results.append((listing, pet, location))
             elif age == '>10' and pet_age > 10:
-                filtered_results.append((listing, pet))
+                filtered_results.append((listing, pet, location))
         results = filtered_results
 
     # Convert results to desired format
     response_data = []
-    for listing, pet in results:
+    for listing, pet, location in results:  # Added location to unpacking
         response_data.append({
             'listing': listing.to_dict(),
             'pet': pet.to_dict(),
+            'location': location.to_dict()  # Add location details to the response
         })
 
     return jsonify(response_data), 200
+
 
 def get_years_from_date(date_of_birth):
     today = datetime.now()

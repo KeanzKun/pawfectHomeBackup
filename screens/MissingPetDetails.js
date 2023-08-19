@@ -24,6 +24,10 @@ function formatDate(dateString) {
     return day + ' ' + monthNames[monthIndex] + ' ' + year;
 }
 
+function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
 const MissingPetDetails = ({ route }) => {
     const navigation = useNavigation();
     const [petDetails, setPetDetails] = useState(null);
@@ -31,6 +35,7 @@ const MissingPetDetails = ({ route }) => {
     const [isFullDescriptionShown, setIsFullDescriptionShown] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [userContact, setUserContact] = useState(null);
+    const { locationDetails } = route.params
 
     useEffect(() => {
         const fetchPetDetails = async () => {
@@ -164,7 +169,9 @@ const MissingPetDetails = ({ route }) => {
         const { petAge } = route.params;
         const formattedDate = formatDate(petDetails.listing.listing_date);
         const gender = 'gender-' + petDetails.pet.pet_gender;
-
+        const petType = capitalizeFirstLetter(petDetails.pet.pet_type)
+        const locationCity = locationDetails ? locationDetails.city : "Unknown Location";
+        const locationState = locationDetails ? locationDetails.state : "Unknown Location";
         return (
             <View style={{ flex: 1 }}>
 
@@ -211,11 +218,22 @@ const MissingPetDetails = ({ route }) => {
                         <Text style={styles.petName}>
                             {petDetails.pet.pet_name} <MaterialCommunityIcons name={gender} color='#900' size={25} />
                         </Text>
-                        <Text style={styles.detailText}>{petDetails.pet.pet_type}</Text>
-                        <Text style={styles.detailText}>{petDetails.pet.pet_breed}</Text>
-                        <Text style={styles.detailText}>Age: {petAge}</Text>
-                        <Text style={styles.detailText}>Location: {petDetails.listing.listing_location}</Text>
-                        <Text style={styles.detailText}>Owner: {petDetails.user.user_name}</Text>
+                        <View style={{ flexDirection: 'row', marginBottom: '2%' }}>
+                            <MaterialCommunityIcons name="paw" color='#900' size={20} />
+                            <Text style={styles.detailText}>{petType}, {petDetails.pet.pet_breed}</Text>
+                        </View>
+                        <View style={{ flexDirection: 'row', marginBottom: '2%' }}>
+                            <MaterialCommunityIcons name="calendar-blank-outline" color='#900' size={20} />
+                            <Text style={styles.detailText}>{petAge}</Text>
+                        </View>
+                        <View style={{ flexDirection: 'row', marginBottom: '2%' }}>
+                            <MaterialCommunityIcons name="map-marker" color='#900' size={20} />
+                            <Text style={styles.detailText}>{locationCity}, {locationState}</Text>
+                        </View>
+                        <View style={{ flexDirection: 'row', marginBottom: '2%' }}>
+                            <MaterialCommunityIcons name="account" color='#900' size={20} />
+                            <Text style={styles.detailText}>{petDetails.user.user_name}</Text>
+                        </View>
                     </View>
 
                     <View style={styles.titleContainer}>
@@ -379,6 +397,7 @@ const styles = StyleSheet.create({
         marginTop: windowHeight * - 0.01
     },
     detailText: {
+        marginLeft: '2%',
         fontSize: 15,
     },
     contactContainer: {

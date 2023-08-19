@@ -24,6 +24,7 @@ function getAgeFromDate(dateOfBirth) {
   return `${years}y ${months}m`;
 }
 
+
 const HomeScreen = () => {
 
   const navigation = useNavigation();
@@ -53,6 +54,7 @@ const HomeScreen = () => {
   const fetchData = useCallback(async () => {
     let url;
     setRefreshing(true);
+
     if (Object.values(filters).some(value => value !== null)) {
       url = `${SERVER_ADDRESS}/api/search_listings?`;
       const params = [];
@@ -65,11 +67,27 @@ const HomeScreen = () => {
     } else {
       url = `${SERVER_ADDRESS}/api/listings`; // use the original endpoint if no filters
     }
+
     try {
       console.log(url);
       const response = await fetch(url);
       const json = await response.json();
-      setData(json);
+
+      const updatedData = await Promise.all(json.map(async item => {
+        if (item.listing.locationID) {
+          try {
+            const locationResponse = await fetch(`${SERVER_ADDRESS}/api/listing-location/${item.listing.locationID}`);
+            const locationData = await locationResponse.json();
+            item.listing.locationDetails = locationData;
+          } catch (error) {
+            console.error("Error fetching location details:", error);
+          }
+        }
+        return item;
+      }));
+
+      setData(updatedData);
+
     } catch (error) {
       console.error(error);
     } finally {
@@ -105,11 +123,17 @@ const HomeScreen = () => {
     const imageUrl = `${SERVER_ADDRESS}/api/pets/pet_image/${firstPhoto}`;
     const petAge = getAgeFromDate(item.pet.pet_age);
     const gender = 'gender-' + item.pet.pet_gender;
+    const locationCity = item.listing.locationDetails ? item.listing.locationDetails.city : "Unknown Location";
 
     return (
       <TouchableOpacity
         style={styles.item}
-        onPress={() => navigation.navigate("PetDetails", { listingID: item.listing.listingID, petAge: petAge })}
+        onPress={() => navigation.navigate("PetDetails", {
+          listingID: item.listing.listingID,
+          petAge: petAge,
+          locationDetails: item.listing.locationDetails  // Pass the location details
+        })}
+
       >
         <Image source={{ uri: imageUrl }} style={styles.itemImage} />
         <View style={styles.itemTextContainer}>
@@ -117,8 +141,10 @@ const HomeScreen = () => {
             <TextStroke stroke="#533e41" strokeWidth={0.3} style={[styles.itemText, { fontSize: 19, fontWeight: '800' }]}>{item.pet.pet_name}</TextStroke >
             <MaterialCommunityIcons name={gender} color={Color.sandybrown} size={25} />
           </View>
+
           <TextStroke stroke="#533e41" strokeWidth={0.1} style={styles.itemText}>{item.pet.pet_breed}</TextStroke>
           <TextStroke stroke="#533e41" strokeWidth={0.1} style={styles.itemText}>{petAge}</TextStroke>
+          <TextStroke stroke="#533e41" strokeWidth={0.1} style={styles.itemText}>{locationCity}</TextStroke>
         </View>
       </TouchableOpacity>
     );
