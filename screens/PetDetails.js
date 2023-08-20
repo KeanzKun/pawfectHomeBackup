@@ -5,6 +5,7 @@ import { Color, FontFamily } from "../GlobalStyles";
 import { useNavigation } from '@react-navigation/native';
 import ReportListingModal from '../components/ReportListingModal';
 import EnlargeImageModal from '../components/EnlargeImageModal'
+import LinearLoadingIndicator from '../components/LinearLoadingIndicator';
 
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
@@ -38,6 +39,7 @@ const PetDetails = ({ route }) => {
     const [activeIndex, setActiveIndex] = useState(0);
     const [imageModalVisible, setImageModalVisible] = useState(false);
     const { locationDetails } = route.params;
+    const [isLoadingVisible, setIsLoadingVisible] = useState(false);
 
     const handleReportListing = () => {
         setModalVisible(true);
@@ -199,9 +201,25 @@ const PetDetails = ({ route }) => {
 
     if (isLoading) { // Render a loading indicator if data is still being fetched
         return (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <ActivityIndicator size="large" color="#0000ff" />
-            </View>
+            <Modal
+                animationType="fade"
+                transparent={true}
+                visible={isLoadingVisible}
+                onRequestClose={() => {
+                    setIsLoadingVisible(false);
+                }}
+            >
+                <View style={{ flex: 1, width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                    <View style={{ flex: 1, width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}>
+                        <Image source={require('../assets/icon/cat-typing.gif')} style={{ width: '28%', height: '8%', marginBottom: '3%' }} />
+                        <Text style={{ color: Color.sandybrown, fontSize: 20 }}>Please wait while our furry staff</Text>
+                        <Text style={{ color: Color.sandybrown, fontSize: 20, marginBottom: '5%' }}>working on it...</Text>
+                        <View style={{ width: '50%', overflow: 'hidden' }}>
+                            <LinearLoadingIndicator></LinearLoadingIndicator>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         );
     } else { // Once data is available, render your component with actual data
         const imageFilenames = petDetails.pet.pet_photo.split(';');

@@ -29,7 +29,7 @@ const SignUp = () => {
     const [isLoading, setIsLoading] = useState(false)
     const [emailSent, setEmailSent] = useState(true)
     const [userID, setUserID] = useState('')
-    const [userStatus, setUserStatus] = useState(null);
+    const [passwordValid, setPasswordValid] = useState(true);
 
     const resetForm = () => {
         setUserName('');
@@ -95,7 +95,7 @@ const SignUp = () => {
         }
 
         // If fields are filled, check validation criteria
-        if (!isEmailValid || (isEmailExist && (userStatus === 'active' || userStatus === 'banned')) || isContactNumbeExist || !isUsernameValid || !isPasswordMatch || !isContactNumberValid || isDisposableDomain) {
+        if (!isEmailValid || !passwordValid || (isEmailExist) || isContactNumbeExist || !isUsernameValid || !isPasswordMatch || !isContactNumberValid || isDisposableDomain) {
             setModalMessage("Please meet all the input criteria");
             setModalVisible(true);
             return false;
@@ -103,6 +103,7 @@ const SignUp = () => {
 
         return true; // Return true if all fields are filled and validation criteria are met
     };
+
 
     const validateContactNumber = async (text) => {
         if (text.startsWith("+60")) {
@@ -151,7 +152,6 @@ const SignUp = () => {
     const handleEmailChange = async (text) => {
         setUserEmail(text);
         setEmailExist(false);
-        // Make a POST request to the API endpoint to check if email already exists
         try {
             const response = await fetch(`${SERVER_ADDRESS}/api/check-email`, {
                 method: 'POST',
@@ -159,23 +159,20 @@ const SignUp = () => {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    email: text.toLowerCase(), // Send email in lowercase
+                    email: text.toLowerCase(),
                 }),
             });
-    
+
             const json = await response.json();
-    
+
             if (json.exists) {
                 setEmailExist(true);
-                setUserStatus(json.status); // Set user status from the server response
-            } else {
-                setUserStatus(null); // Clear the user status if the email does not exist
+
             }
         } catch (error) {
             console.error("An error occurred while checking the email:", error);
         }
     };
-    
 
 
     const checkUsernameValid = (text) => {
@@ -190,6 +187,8 @@ const SignUp = () => {
 
     const handlePasswordChange = (text) => {
         setPassword(text);
+        setPasswordValid(isPasswordValid(text)); 
+        console.log(isPasswordValid(text))
         setPasswordMatch(text === confirmPassword);
     };
 
@@ -198,76 +197,31 @@ const SignUp = () => {
         setPasswordMatch(password === text);
     };
 
+    const isPasswordValid = (password) => {
+        const regex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#.,<>[\]])[A-Za-z\d@$!%*?&#.,<>[\]]{8,}$/;
+        return regex.test(password);
+    };
+
     //Called by handleSignUp, send verification code to user
     const handleRequestCode = () => {
         const email = userEmail;
-        setEmailSent(true)
-
+        console.log(userEmail)
         if (userEmail) {
             setIsLoading(true);
             fetch(`${SERVER_ADDRESS}/api/send-email`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email }),
-
             })
                 .then(() => {
                     setEmailSent(true)
                 }).catch((err) => {
                     setEmailSent(false)
-
-                    Alert.alert('error', err)
-                    deleteUserRecord();
-                    return;
+                    Alert.alert('Error', 'Failed to send verification email. Please try again.');
                 });
         }
     }
 
-    //if send email failed, delete the user records
-    const deleteUserRecord = async () => {
-        // First, get the user ID using the provided email
-        try {
-            const response = await fetch(`${SERVER_ADDRESS}/api/registration/getUserID`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: userEmail }), // Make sure to use userEmail state variable
-            });
-            const json = await response.json();
-
-            if (response.ok) {
-                console.log('Get UserID Successfully');
-                // Use the retrieved user ID to delete the user
-                setUserID(json.userID);
-                await deleteUserById(userId);
-            } else {
-                console.error(json.error || 'Error fetching user ID');
-                Alert.alert('Error', json.error || 'Error fetching user ID');
-            }
-        } catch (err) {
-            console.error(err);
-            Alert.alert('Error', 'An error occurred while deleting the user record');
-        }
-    };
-
-    //Called by deleteUserRecord, delete user by userID
-    const deleteUserById = async (userId) => {
-        try {
-            const response = await fetch(`${SERVER_ADDRESS}/api/users/${userId}`, {
-                method: 'DELETE',
-            });
-
-            if (response.ok) {
-                console.log('User and related records deleted successfully');
-            } else {
-                const json = await response.json();
-                console.error(json.message || 'Error deleting user');
-                Alert.alert('Error', json.message || 'Error deleting user');
-            }
-        } catch (err) {
-            console.error(err);
-            Alert.alert('Error', 'An error occurred while deleting the user');
-        }
-    };
 
     //called when user click signup button
     const handleSignUp = async () => {
@@ -276,7 +230,7 @@ const SignUp = () => {
         }
 
         try {
-            const response = await fetch(`${SERVER_ADDRESS}/api/reregister`, { // Changed endpoint to '/api/reregister'
+            const response = await fetch(`${SERVER_ADDRESS}/api/reregister`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -286,21 +240,20 @@ const SignUp = () => {
                     user_email: userEmail,
                     user_password: password,
                     contact_number: contactNumber,
-                    user_status: 'unverified', // or whatever default value you want
+                    user_status: 'unverified',
                 }),
             });
 
             const json = await response.json();
             if (response.status === 200) {
-                resetForm(); // Resets the state to its initial values
                 handleRequestCode();
                 if (emailSent) {
                     navigation.navigate('EmailVerification', { user_email: userEmail, userID: userID });
                 } else {
-                    Alert.alert('Error', 'Error, please try again later.');
+                    Alert.alert('Error', 'Failed to send verification email. Please try again.');
                 }
             } else {
-                alert(json.message); // Alert the user if the sign-up failed
+                alert(json.message);
             }
         } catch (error) {
             console.error(error);
@@ -310,7 +263,7 @@ const SignUp = () => {
 
     return (
         <KeyboardAwareScrollView
-            style={{ backgroundColor: '#4c69a5' }}
+            style={{ flex: 1, backgroundColor: '#f5f5f5', height: '100%' }}
             resetScrollToCoords={{ x: 0, y: 0 }}
             scrollEnabled={true}
         >
@@ -332,7 +285,7 @@ const SignUp = () => {
                     </View>
                 </View>
             </Modal>
-            <View style={[styles.container, { height: windowHeight }]}>
+            <View style={[styles.container, { flex: 1, height: windowHeight }]}>
 
                 <View style={styles.login}>
                     <View style={styles.welcomeContainer}>
@@ -360,16 +313,18 @@ const SignUp = () => {
                             inputStyle={styles.usernameInput}
                         />
                         {!isEmailValid && <Text style={styles.warningText}>Please enter a valid email address.</Text>}
-                        {(isEmailExist && (userStatus === 'active' || userStatus === 'banned')) && <Text style={styles.warningText}>Email registered.</Text>}
+                        {(isEmailExist) && <Text style={styles.warningText}>Email registered.</Text>}
                         {isDisposableDomain && <Text style={styles.warningText}>Disposable email not allowed.</Text>}
                         <Text style={styles.emailLabel}>Password</Text>
                         <Input
                             value={password}
                             required={true}
-                            onChangeText={handlePasswordChange} // Call the handlePasswordChange function
+                            onChangeText={handlePasswordChange}
                             inputStyle={styles.usernameInput}
                             secureTextEntry={true}
                         />
+                        {!passwordValid && <Text style={styles.warningText}>Password must be at least 8 characters, contain 1 number, 1 special character, and 1 capital letter.</Text>}
+
 
                         <Text style={styles.emailLabel}>Confirm Password</Text>
                         <Input

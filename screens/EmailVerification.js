@@ -17,42 +17,43 @@ const EmailVerification = ({ route }) => {
     const [userID, setUserID] = useState('')
     const [isSubmitted, setIsSubmitted] = useState(false);
     let isSubmittedCount = 0
-    //Called by deleteUserRecord, delete user by userID
-    const deleteUserById = async (userID) => {
-        try {
-            console.log('deleteUserById', userID);
-            const response = await fetch(`${SERVER_ADDRESS}/api/users/${userID}`, {
-                method: 'DELETE',
-            });
-            if (response.ok) {
-                console.log('User and related records deleted successfully');
-                navigation.navigate('Login'); // Direct to Login
-            } else {
-                const text = await response.text(); // Read the raw response text
-                console.error(text); // Log it
-                Alert.alert('Error', 'Error deleting user');
-            }
-        } catch (err) {
-            console.error(err);
-            Alert.alert('Error', 'An error occurred while deleting the user');
-        }
-    };
 
-    const handleBackPress = async  () => {
-        try {
-            const userID = await getUserIDBack(); // Get the userID
-            console.log('handleBackPress, userID:', userID);
-            if (userID) {
-                await deleteVerificationRecord(userID);
-                await deleteUserById(userID); // Pass userID as an argument
-            } else {
-                console.error('UserID is null or undefined');
-            }
-        } catch (error) {
-            console.error(error);
-            Alert.alert('Error', 'An error occurred while handling back press');
-        }
+    
+    const handleBackPress = async () => {
+        Alert.alert(
+            'Confirmation', // Title of the alert
+            'Are you sure you want to cancel operation? ', // Message
+            [
+                {
+                    text: 'Cancel',
+                    onPress: () => console.log('User canceled'),
+                    style: 'cancel',
+                },
+                {
+                    text: 'Yes',
+                    onPress: async () => {
+                        try {
+                            const userID = await getUserIDBack(); // Get the userID
+                            console.log('handleBackPress, userID:', userID);
+                            if (userID) {
+                                deleteVerificationRecord(userID); // Only delete the verification record
+                                
+                            } else {
+                                console.error('UserID is null or undefined');
+                            }
+                        } catch (error) {
+                            console.error(error);
+                            Alert.alert('Error', 'An error occurred while handling back press');
+                        }
+                    },
+                },
+            ],
+            { cancelable: false } // This ensures the user has to select one of the options
+        );
+        return true; // This is important to ensure the back action doesn't get propagated further
     };
+    
+
 
     const deleteVerificationRecord = (userID) => {
         return new Promise((resolve, reject) => { // Return a promise
@@ -66,7 +67,7 @@ const EmailVerification = ({ route }) => {
                     .then(data => {
                         console.log(data.message);
                         console.log('deleteVerificationRecord', userID);
-                        // Return the promise from deleteUserById
+                        navigation.navigate('InitialPage')
                     })
                     .then(() => resolve()) // Resolve when done
                     .catch(error => {
@@ -268,7 +269,7 @@ const EmailVerification = ({ route }) => {
                 <View style={{ flex: 2.5 }}>
 
                     <View style={styles.titleContainer}>
-                        <Text style={styles.titleText}>One more step!</Text>
+                        <Text style={styles.titleText}>Let's verify!</Text>
                         <Text style={styles.subTitleText}>Check the code in your email.</Text>
                     </View>
 

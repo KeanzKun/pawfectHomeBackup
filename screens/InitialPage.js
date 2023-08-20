@@ -51,8 +51,8 @@ const InitialPage = () => {
 
   if (!isLoading) {
     return (
-      <ScrollView scrollEnabled={false}>
-        <View style={[styles.container, { height: windowHeight }]}>
+
+        <View style={[styles.container]}>
           <View style={styles.topSection}>
             <Text style={styles.LogoTypo}>Pawfect Home.</Text>
           </View>
@@ -81,7 +81,7 @@ const InitialPage = () => {
             <View style={{ flex: 0.3 }}></View>
           </View>
         </View>
-      </ScrollView>
+
     );
   }
   else {
@@ -127,6 +127,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#FF9E5C",
     justifyContent: "center",
+    height: '100%',
     alignItems: "flex-start"
   },
   topSection: {

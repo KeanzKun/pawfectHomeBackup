@@ -6,6 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 import { SERVER_ADDRESS } from '../config';
 import MapView, { Marker } from 'react-native-maps';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import LinearLoadingIndicator from "../components/LinearLoadingIndicator";
 
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
@@ -104,8 +105,13 @@ const VetDetails = ({ route }) => {
 
     if (isLoading) { // Render a loading indicator if data is still being fetched
         return (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <ActivityIndicator size="large" color="#0000ff" />
+            <View style={{ width: '100%', height: '100%', marginTop: '50%', alignItems: 'center' }}>
+                <Image source={require('../assets/icon/cat-typing.gif')} style={{ width: '28%', height: '8%', marginBottom: '3%' }} />
+                <Text style={{ color: Color.sandybrown, fontSize: 20 }}>Please wait while our furry staff</Text>
+                <Text style={{ color: Color.sandybrown, fontSize: 20, marginBottom: '5%' }}>working on it...</Text>
+                <View style={{ width: '50%', overflow: 'hidden' }}>
+                    <LinearLoadingIndicator></LinearLoadingIndicator>
+                </View>
             </View>
         );
     } else {

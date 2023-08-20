@@ -5,7 +5,10 @@ import { useNavigation } from '@react-navigation/native';
 import TextStroke from '../components/TextStroke';
 import SearchModal from '../components/SearchModal';
 import { SERVER_ADDRESS } from '../config';
+import LinearLoadingIndicator from '../components/LinearLoadingIndicator';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import Geolocation from '@react-native-community/geolocation';
+import { request, PERMISSIONS } from 'react-native-permissions';
 
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
@@ -24,7 +27,6 @@ function getAgeFromDate(dateOfBirth) {
   return `${years}y ${months}m`;
 }
 
-
 const HomeScreen = () => {
 
   const navigation = useNavigation();
@@ -33,11 +35,16 @@ const HomeScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [filters, setFilters] = useState({});
   const [selectedType, setSelectedType] = useState(null);
+  const [userLocation, setUserLocation] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const handleSearch = (searchFilters) => {
+    console.log('b4 set', filters)
     setFilters(searchFilters);
+    console.log('after set', filters)
     setSelectedType(null); // Reset the selected type
   };
+
 
   const handleTypePress = (type) => {
     if (selectedType === type) {
@@ -50,10 +57,49 @@ const HomeScreen = () => {
   };
   const dataWithPhotos = data.filter(item => item.pet.pet_photo);
 
+  //get user location
+  const getUserLocation = async () => {
+    try {
+      const permission = await request(PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION);
 
-  const fetchData = useCallback(async () => {
+      if (permission === 'granted') {
+        Geolocation.getCurrentPosition(
+          position => {
+            const { latitude, longitude } = position.coords;
+            setUserLocation({ latitude, longitude });
+          },
+          error => {
+            console.error(error);
+          },
+          { enableHighAccuracy: false, timeout: 15000, maximumAge: 10000 }
+        );
+        console.log('GET USER LOCATION GRANTED')
+      }
+    } catch (error) {
+      console.error("Location permission error:", error);
+    }
+  };
+
+  //call userLocation hook when loaded
+  useEffect(() => {
+    getUserLocation();
+  }, []);
+
+  //call data hook when filters updated
+  useEffect(() => {
+    console.log("useEffect triggered");
+    fetchData();
+  }, [filters]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData, userLocation]);
+
+
+  const fetchData = async () => {
     let url;
-    setRefreshing(true);
+    console.log("fetchData called");
+    console.log(Object.values(filters).some(value => value))
 
     if (Object.values(filters).some(value => value !== null)) {
       url = `${SERVER_ADDRESS}/api/search_listings?`;
@@ -65,11 +111,21 @@ const HomeScreen = () => {
       });
       url += params.join('&');
     } else {
+      console.log('ELSE API LISING');
       url = `${SERVER_ADDRESS}/api/listings`; // use the original endpoint if no filters
     }
 
+    // Append user's latitude and longitude to the URL
+    if (userLocation) {
+      if (url.includes('?')) {
+        url += `&latitude=${userLocation.latitude}&longitude=${userLocation.longitude}`;
+      } else {
+        url += `?latitude=${userLocation.latitude}&longitude=${userLocation.longitude}`;
+      }
+    }
+
+
     try {
-      console.log(url);
       const response = await fetch(url);
       const json = await response.json();
 
@@ -92,29 +148,11 @@ const HomeScreen = () => {
       console.error(error);
     } finally {
       setRefreshing(false);
+      setIsLoading(false);  // Set loading to false after data is fetched
     }
-  }, [filters]);
+  }
 
 
-  useEffect(() => {
-    // Handle the back button press event
-    const handleBackPress = () => {
-      BackHandler.exitApp(); // Exit the app
-      return true; // Prevent default behavior
-    };
-
-    // Add the event listener
-    BackHandler.addEventListener('hardwareBackPress', handleBackPress);
-
-    // Return a cleanup function to remove the event listener
-    return () => {
-      BackHandler.removeEventListener('hardwareBackPress', handleBackPress);
-    };
-  }, []);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
 
   const renderItem = ({ item }) => {
     if (!item.pet.pet_photo) return null;  // Guard clause
@@ -150,71 +188,86 @@ const HomeScreen = () => {
     );
   };
 
+  if (!isLoading) {
+    return (
+      <View style={styles.container}>
 
-  return (
-    <View style={styles.container}>
+        <SearchModal modalVisible={modalVisible} setModalVisible={setModalVisible} onSearch={handleSearch} />
 
-      <SearchModal modalVisible={modalVisible} setModalVisible={setModalVisible} onSearch={handleSearch} />
+        <Text style={styles.titleText}>Pawfect Home.</Text>
 
-      <Text style={styles.titleText}>Pawfect Home.</Text>
+        <View style={styles.searchContainer}>
+          <TouchableOpacity style={styles.searchButton}
+            onPress={() => setModalVisible(true)}>
+            <Text style={styles.searchText}>Search</Text>
+          </TouchableOpacity>
+        </View>
 
-      <View style={styles.searchContainer}>
-        <TouchableOpacity style={styles.searchButton}
-          onPress={() => setModalVisible(true)}>
-          <Text style={styles.searchText}>Search</Text>
-        </TouchableOpacity>
+        <View style={styles.categoriesContainer}>
+          <Text style={styles.categories}>Categories</Text>
+        </View>
+
+        <View style={styles.buttonsContainer}>
+
+          <TouchableOpacity
+            style={[styles.button, selectedType === "Cat" && styles.selectedButton]}
+            onPress={() => handleTypePress("Cat")}
+          >
+            <Image source={require("../assets/icon/catIcon.png")} style={styles.filterIcon} />
+            <Text>Cat</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.button, selectedType === "Dog" && styles.selectedButton]}
+            onPress={() => handleTypePress("Dog")}
+          >
+            <Image source={require("../assets/icon/dogIcon.png")} style={styles.filterIcon} />
+            <Text>Dog</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.button, selectedType === "Bird" && styles.selectedButton]}
+            onPress={() => handleTypePress("Bird")}
+          >
+            <Image source={require("../assets/icon/birdIcon.png")} style={styles.filterIcon} />
+            <Text>Bird</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.button, selectedType === "Hamster" && styles.selectedButton]}
+            onPress={() => handleTypePress("Hamster")}
+          >
+            <Image source={require("../assets/icon/hamsterIcon.png")} style={styles.filterIcon} />
+            <Text>Hamster</Text>
+          </TouchableOpacity>
+
+        </View>
+
+        <FlatList
+          data={dataWithPhotos}
+          renderItem={renderItem}
+          keyExtractor={item => item.pet.petID.toString()}
+          numColumns={2}
+          onRefresh={fetchData}
+          refreshing={refreshing}
+        />
+
+
       </View>
-
-      <View style={styles.categoriesContainer}>
-        <Text style={styles.categories}>Categories</Text>
+    );
+  }
+  else {
+    return (
+      <View style={{ width: '100%', height: '100%', marginTop: '50%', alignItems: 'center' }}>
+        <Image source={require('../assets/icon/cat-typing.gif')} style={{ width: '28%', height: '8%', marginBottom: '3%' }} />
+        <Text style={{ color: Color.sandybrown, fontSize: 20 }}>Please wait while our furry staff</Text>
+        <Text style={{ color: Color.sandybrown, fontSize: 20, marginBottom: '5%' }}>working on it...</Text>
+        <View style={{ width: '50%', overflow: 'hidden' }}>
+          <LinearLoadingIndicator></LinearLoadingIndicator>
+        </View>
       </View>
-
-      <View style={styles.buttonsContainer}>
-
-        <TouchableOpacity
-          style={[styles.button, selectedType === "Cat" && styles.selectedButton]}
-          onPress={() => handleTypePress("Cat")}
-        >
-          <Image source={require("../assets/icon/catIcon.png")} style={styles.filterIcon} />
-          <Text>Cat</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.button, selectedType === "Dog" && styles.selectedButton]}
-          onPress={() => handleTypePress("Dog")}
-        >
-          <Image source={require("../assets/icon/dogIcon.png")} style={styles.filterIcon} />
-          <Text>Dog</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.button, selectedType === "Bird" && styles.selectedButton]}
-          onPress={() => handleTypePress("Bird")}
-        >
-          <Image source={require("../assets/icon/birdIcon.png")} style={styles.filterIcon} />
-          <Text>Bird</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.button, selectedType === "Hamster" && styles.selectedButton]}
-          onPress={() => handleTypePress("Hamster")}
-        >
-          <Image source={require("../assets/icon/hamsterIcon.png")} style={styles.filterIcon} />
-          <Text>Hamster</Text>
-        </TouchableOpacity>
-
-      </View>
-      <FlatList
-        data={dataWithPhotos}
-        renderItem={renderItem}
-        keyExtractor={item => item.pet.petID.toString()}
-        numColumns={2}
-        onRefresh={fetchData}  // Add this line
-        refreshing={refreshing}  // And this line
-      />
-
-    </View>
-  );
+    );
+  }
 };
 
 const styles = StyleSheet.create({
@@ -228,6 +281,21 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginTop: 22
+  },
+  loadingScreen: {
+    color: Color.sandybrown,
+    fontSize: windowHeight * 0.05,
+    fontFamily: FontFamily.latoExtrabold,
+    fontWeight: "900",
+    textAlign: "center",
+  },
+  loadingScreenContainer: {
+    flex: 1,
+    height: '100%',
+    justifyContent: 'center',
+    alignContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: '5%',
   },
   modalView: {
     margin: 20,

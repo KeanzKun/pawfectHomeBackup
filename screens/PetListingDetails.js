@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { BackHandler, View, Alert, Text, TouchableOpacity, Dimensions, StyleSheet, ScrollView, Image, ActivityIndicator } from 'react-native';
+import { Modal, BackHandler, View, Alert, Text, TouchableOpacity, Dimensions, StyleSheet, ScrollView, Image, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome'; // Assuming you are using FontAwesome for icons
 import { Color, FontFamily } from "../GlobalStyles";
 import { useNavigation } from '@react-navigation/native';
 import { SERVER_ADDRESS } from '../config';
 import Swiper from 'react-native-swiper';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import LinearLoadingIndicator from '../components/LinearLoadingIndicator';
 
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
@@ -35,6 +36,7 @@ const PetListingDetails = ({ route }) => {
     const [isFullDescriptionShown, setIsFullDescriptionShown] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [buttonText, setButtonText] = useState(null);
+    const [isLoadingVisible, setIsLoadingVisible] = useState(false);
 
     useEffect(() => {
         if (petDetails) {
@@ -49,7 +51,7 @@ const PetListingDetails = ({ route }) => {
     function capitalizeFirstLetter(string) {
         return string.charAt(0).toUpperCase() + string.slice(1);
     }
-    
+
     useEffect(() => {
         // Handle the back button press event
         const handleBackPress = () => {
@@ -151,9 +153,25 @@ const PetListingDetails = ({ route }) => {
 
     if (isLoading) { // Render a loading indicator if data is still being fetched
         return (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <ActivityIndicator size="large" color="#0000ff" />
-            </View>
+            <Modal
+                animationType="fade"
+                transparent={true}
+                visible={isLoadingVisible}
+                onRequestClose={() => {
+                    setIsLoadingVisible(false);
+                }}
+            >
+                <View style={{ flex: 1, width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                    <View style={{ flex: 1, width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}>
+                        <Image source={require('../assets/icon/cat-typing.gif')} style={{ width: '28%', height: '8%', marginBottom: '3%' }} />
+                        <Text style={{ color: Color.sandybrown, fontSize: 20 }}>Please wait while our furry staff</Text>
+                        <Text style={{ color: Color.sandybrown, fontSize: 20, marginBottom: '5%' }}>working on it...</Text>
+                        <View style={{ width: '50%', overflow: 'hidden' }}>
+                            <LinearLoadingIndicator></LinearLoadingIndicator>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         );
     } else { // Once data is available, render your component with actual data
         const imageFilenames = petDetails.pet.pet_photo.split(';');

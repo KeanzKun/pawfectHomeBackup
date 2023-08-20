@@ -4,6 +4,8 @@ import { Color, FontFamily } from "../GlobalStyles";
 import { useNavigation } from '@react-navigation/native';
 import { SERVER_ADDRESS } from '../config';
 import SearchVetModal from '../components/SearchVetModal';
+import Geolocation from '@react-native-community/geolocation';
+import { request, PERMISSIONS } from 'react-native-permissions';
 
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
@@ -12,21 +14,58 @@ const VetScreen = () => {
   const navigation = useNavigation();
   const [data, setData] = useState([]);
   const [modalVisible, setModalVisible] = useState(false); // For modal visibility
+  const [userLocation, setUserLocation] = useState(null);
 
   useEffect(() => {
     fetchVets();
+}, [userLocation]);  // Add userLocation as a dependency
+
+const getUserLocation = async () => {
+    try {
+      const permission = await request(PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION);
+      if (permission === 'granted') {
+        Geolocation.getCurrentPosition(
+          position => {
+            const { latitude, longitude } = position.coords;
+            setUserLocation({ latitude, longitude });  // This will trigger the above useEffect
+          },
+          error => {
+            console.error(error);
+          },
+          { enableHighAccuracy: false, timeout: 15000, maximumAge: 10000 }
+        );
+      }
+    } catch (error) {
+      console.error("Location permission error:", error);
+    }
+};
+  
+  useEffect(() => {
+    getUserLocation();
   }, []);
 
+  
   const fetchVets = (state = null) => {
     let url = `${SERVER_ADDRESS}/api/vets`;
+    const params = [];
     if (state) {
-      url += `?vet_state=${state}`;
+      params.push(`vet_state=${state}`);
     }
+    if (userLocation) {
+      params.push(`latitude=${userLocation.latitude}&longitude=${userLocation.longitude}`);
+    }
+    if (params.length) {
+      url += `?${params.join('&')}`;
+    }
+    
+    console.log(url)
+
     fetch(url)
       .then((response) => response.json())
       .then((json) => setData(json))
       .catch((error) => console.error(error));
   };
+  
 
   const handleSearch = (filters) => {
     if (filters.vetState) {

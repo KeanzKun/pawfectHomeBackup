@@ -5,6 +5,8 @@ import { useNavigation } from '@react-navigation/native';
 import TextStroke from '../components/TextStroke';
 import { SERVER_ADDRESS } from '../config';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import Geolocation from '@react-native-community/geolocation';
+import { request, PERMISSIONS } from 'react-native-permissions';
 
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
@@ -28,12 +30,44 @@ const MissingPetScreen = () => {
   const navigation = useNavigation();
   const [data, setData] = useState([]);  // Initializing state to hold pet data
   const [refreshing, setRefreshing] = useState(false);
+  const [userLocation, setUserLocation] = useState(null);
+
+  const getUserLocation = async () => {
+    try {
+      const permission = await request(PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION);
+      if (permission === 'granted') {
+        Geolocation.getCurrentPosition(
+          position => {
+            const { latitude, longitude } = position.coords;
+            setUserLocation({ latitude, longitude });
+          },
+          error => {
+            console.error(error);
+          },
+          { enableHighAccuracy: false, timeout: 15000, maximumAge: 10000 }
+        );
+      }
+    } catch (error) {
+      console.error("Location permission error:", error);
+    }
+  };
+
+  useEffect(() => {
+    getUserLocation();
+  }, []);
 
 
   const fetchData = useCallback(async () => {
     setRefreshing(true);
+    let url = `${SERVER_ADDRESS}/api/listings/missing`;
+
+    // Append user's latitude and longitude to the URL
+    if (userLocation) {
+      url += `?latitude=${userLocation.latitude}&longitude=${userLocation.longitude}`;
+    }
+
     try {
-      const response = await fetch(`${SERVER_ADDRESS}/api/listings/missing`);
+      const response = await fetch(url);
       const json = await response.json();
 
       const updatedData = await Promise.all(json.map(async item => {
@@ -56,7 +90,7 @@ const MissingPetScreen = () => {
     } finally {
       setRefreshing(false);
     }
-  }, []);
+  }, [userLocation]);
 
 
   const dataWithPhotos = data.filter(item => item.pet.pet_photo);

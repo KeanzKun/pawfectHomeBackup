@@ -5,12 +5,14 @@ import jwt
 from datetime import datetime, timedelta
 from flask_mail import Mail, Message
 import random
+from flask_bcrypt import Bcrypt
+import math
 
 app = Flask(__name__)
 SECRET_KEY = 'YOUR_SECRET_KEY'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://us3r:1234@localhost/pawfecthome'
 db.init_app(app)
-
+bcrypt = Bcrypt(app)
 
 app.config['MAIL_SERVER'] = 'smtp-mail.outlook.com'
 app.config['MAIL_PORT'] = 587
@@ -39,12 +41,13 @@ def check_email():
 @app.route('/api/check-email', methods=['POST'])
 def forgotPassword_check_email():
     data = request.get_json()
-    email = data.get('email').lower() # Get email and convert to lowercase
+    email = data.get('email').lower()
     user = User.query.filter_by(user_email=email).first()
     if user:
-        return jsonify(exists=True, status=user.user_status), 200
+        return jsonify(exists=True), 200
     else:
         return jsonify(exists=False), 200
+
 
 @app.route('/api/reregister', methods=['POST'])
 def reregister():
@@ -55,19 +58,23 @@ def reregister():
     contact_number = request.json['contact_number']
     user_status = 'unverified'
 
-    # Check if the email is already registered with status 'unverified'
-    existing_user = User.query.filter_by(user_email=user_email, user_status='unverified').first()
+    hashed_password = bcrypt.generate_password_hash(user_password).decode('utf-8')
+    
+    # Check if the email is already registered
+    existing_user = User.query.filter_by(user_email=user_email).first()
     if existing_user:
-        # Delete the existing user
-        db.session.delete(existing_user)
-        # Delete related records like verification code, listings, etc.
-        #...
+        # If the user is active or banned, return an error message
+        if existing_user.user_status in ['active', 'banned']:
+            return jsonify({'message': 'Email is already registered and verified.'}), 400
+        # If the user is unverified, update the existing record
+        else:
+            return jsonify({'message': 'Something went wrong, Please try again.'}), 400
 
-    # Create the User object
+    # If no existing user, create the User object
     new_user = User(
         user_name=user_name,
         user_email=user_email,
-        user_password=user_password,
+        user_password=hashed_password,  # Store the hashed password
         contact_number=contact_number,
         user_status=user_status
     )
@@ -76,7 +83,8 @@ def reregister():
     db.session.add(new_user)
     db.session.commit()
 
-    return jsonify({'message': 'User re-registered successfully'}), 200
+    return jsonify({'message': 'User registered successfully'}), 200
+
 
 
 @app.route('/api/check-contactNumber', methods=['POST'])
@@ -200,7 +208,7 @@ def login():
 
     # Fetch the user by email
     user = User.query.filter(User.user_email == userEmail).first()
-    if user and user.user_password == password:
+    if user and bcrypt.check_password_hash(user.user_password, password):  # Check the password against its hash
         # Generate a token containing the user's ID
         token = jwt.encode({'user_id': user.userID}, SECRET_KEY, algorithm='HS256')
         # Return the token along with the user's details
@@ -258,13 +266,22 @@ def register():
 @app.route('/api/vets', methods=['GET'])
 def get_vets():
     vet_state = request.args.get('vet_state')
+    latitude = request.args.get('latitude', type=float)
+    longitude = request.args.get('longitude', type=float)
     
     if vet_state:
         vets = Vet.query.filter_by(vet_state=vet_state).all()
     else:
         vets = Vet.query.all()
-    
-    return jsonify([vet.to_dict() for vet in vets]), 200
+
+    # Convert vets to a list
+    vet_list = list(vets)
+
+    # If latitude and longitude are provided, sort the vets by distance
+    if latitude and longitude:
+        vet_list.sort(key=lambda vet: haversine_distance(latitude, longitude, vet.vet_latitude, vet.vet_longitude))
+
+    return jsonify([vet.to_dict() for vet in vet_list]), 200
 
 
 @app.route('/api/vets/<int:vetID>', methods=['GET'])
@@ -422,17 +439,60 @@ def get_listing_location(locationID):
 
 @app.route('/api/listings', methods=['GET'])
 def get_listings():
+    user_lat = request.args.get('latitude', type=float)  # Get user's latitude from request
+    user_lon = request.args.get('longitude', type=float)  # Get user's longitude from request
+          
     listings = Listing.query.filter(Listing.listing_status == 'active', Listing.listing_type != 'missing').all()
     result = []
+
     for listing in listings:
-        pet = Pets.query.get(listing.petID)  # assuming listing has petID attribute
+        pet = Pets.query.get(listing.petID)
         if pet is None:
-            continue  # you can decide how you want to handle this scenario
+            continue
+
+        location = ListingLocation.query.get(listing.locationID)
+        if location is None:
+            continue
+        
+        distance = None
+        if user_lat and user_lon:
+            distance = haversine_distance(user_lat, user_lon, location.latitude, location.longitude)
+
         result.append({
             'listing': listing.to_dict(),
             'pet': pet.to_dict(),
+            'distance': distance  # Add distance to the result
         })
+
+    # Sort the results by distance if latitude and longitude are provided, otherwise sort by listing creation date (assuming there's a created_at field in the Listing model)
+    if user_lat and user_lon:
+        result.sort(key=lambda x: x['distance'])
+    else:
+        result.sort(key=lambda x: x['listing']['listingID'], reverse=True)
+
     return jsonify(result), 200
+
+
+def haversine_distance(lat1, lon1, lat2, lon2):
+    # Convert decimal.Decimal to float
+    lat1 = float(lat1)
+    lon1 = float(lon1)
+    lat2 = float(lat2)
+    lon2 = float(lon2)
+
+    R = 6371  # Radius of the Earth in kilometers
+
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+
+    a = (math.sin(dlat / 2) * math.sin(dlat / 2) +
+         math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) *
+         math.sin(dlon / 2) * math.sin(dlon / 2))
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+    distance = R * c
+    return distance
+
 
 @app.route('/api/search_listings', methods=['GET'])
 def search_listings():
@@ -440,6 +500,8 @@ def search_listings():
     status = request.args.get('status')
     age = request.args.get('age')
     location_state = request.args.get('location')  # Renamed to location_state for clarity
+    latitude = request.args.get('latitude', type=float)
+    longitude = request.args.get('longitude', type=float)
 
     # Join with ListingLocation table
     query = db.session.query(Listing, Pets, ListingLocation).join(Pets, Listing.petID == Pets.petID).join(ListingLocation, Listing.locationID == ListingLocation.locationID)
@@ -452,7 +514,7 @@ def search_listings():
     if location_state:
         query = query.filter(ListingLocation.state == location_state)  # Filter by state
 
-    # Execute the query
+       # Execute the query
     results = query.all()
 
     # Filter results based on age
@@ -471,6 +533,10 @@ def search_listings():
             elif age == '>10' and pet_age > 10:
                 filtered_results.append((listing, pet, location))
         results = filtered_results
+
+    # Sort by distance if latitude and longitude are provided
+    if latitude and longitude:
+        results.sort(key=lambda x: haversine_distance(latitude, longitude, x[2].latitude, x[2].longitude))
 
     # Convert results to desired format
     response_data = []
@@ -501,8 +567,8 @@ def get_active_listings():
         return jsonify({'error': 'User ID not provided'}), 400  # Return an error if no user_id
 
     print(user_id)
-    # Filter listings by the provided user_id and listing_status as 'active'
-    listings = Listing.query.filter_by(userID=user_id, listing_status='active').all()
+    # Filter listings by the provided user_id and listing_status as 'active' and order by listingID
+    listings = Listing.query.filter_by(userID=user_id, listing_status='active').order_by(Listing.listingID.desc()).all()
 
     result = []
     for listing in listings:
@@ -515,6 +581,7 @@ def get_active_listings():
         })
     return jsonify(result), 200
 
+
 @app.route('/api/listings/history', methods=['GET'])
 def get_history_listings():
     user_id = request.args.get('userID')
@@ -523,7 +590,7 @@ def get_history_listings():
 
     print(user_id)
     # Filter listings by the provided user_id and listing_status not equal to 'active'
-    listings = Listing.query.filter(Listing.userID == user_id, Listing.listing_status != 'active').all()
+    listings = Listing.query.filter(Listing.userID == user_id, Listing.listing_status != 'active').order_by(Listing.listingID.desc()).all()
 
     result = []
     for listing in listings:
@@ -569,17 +636,40 @@ def reset_password():
 
 @app.route('/api/listings/missing', methods=['GET'])
 def get_missing_listings():
+    latitude = request.args.get('latitude', default=0, type=float)
+    longitude = request.args.get('longitude', default=0, type=float)
+
     listings = Listing.query.filter_by(listing_type='missing').all()
     result = []
+
     for listing in listings:
         pet = Pets.query.get(listing.petID)  # assuming listing has petID attribute
         if pet is None:
             continue  # you can decide how you want to handle this scenario
+
+        location = ListingLocation.query.get(listing.locationID)
+        if location is None:
+            continue
+
+        # Calculate distance only if latitude and longitude are not both 0
+        if latitude != 0 or longitude != 0:
+            distance = haversine_distance(latitude, longitude, location.latitude, location.longitude)
+        else:
+            distance = None
+
         result.append({
             'listing': listing.to_dict(),
             'pet': pet.to_dict(),
+            'distance': distance  # Add distance to the result
         })
+
+    # Sort the results by distance if latitude and longitude are provided and not both 0
+    if latitude != 0 or longitude != 0:
+        result.sort(key=lambda x: x['distance'] if x['distance'] is not None else float('inf'))
+
     return jsonify(result), 200
+
+
 
 @app.route('/api/validate-password', methods=['POST'])
 def validate_password():
