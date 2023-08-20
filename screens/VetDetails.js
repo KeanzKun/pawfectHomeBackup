@@ -117,15 +117,17 @@ const VetDetails = ({ route }) => {
     } else {
         return (
 
-            <ScrollView>
-                <View style={{ flex: 1 }}>
+            <View style={{ flex: 1 }}>
+                <TouchableOpacity
+                    style={styles.backButton}
+                    onPress={() => navigation.goBack()} // Navigate back to the previous screen
+                >
+                    <Text style={styles.backButtonText}>&lt;</Text>
+                </TouchableOpacity>
 
-                    <TouchableOpacity
-                        style={styles.backButton}
-                        onPress={() => navigation.goBack()} // Navigate back to the previous screen
-                    >
-                        <Text style={styles.backButtonText}>&lt;</Text>
-                    </TouchableOpacity>
+
+
+                <ScrollView>
 
                     <View style={styles.container}>
 
@@ -196,8 +198,8 @@ const VetDetails = ({ route }) => {
                         </View>
 
                     </View>
-                </View>
-            </ScrollView>
+                </ScrollView>
+            </View>
         );
     }
 };
@@ -206,44 +208,22 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
-    buttonFrame: {
-        flex: 1,
-        alignItems: "center",
-        width: windowWidth,
-        marginBottom: windowHeight * 0.08
-    },
     backButton: {
         position: 'absolute',
-        top: 20, // adjust this value as per your needs
-        left: 20, // adjust this value as per your needs
+        top: 20,
+        left: 20,
         width: windowHeight * 0.05,
         height: windowHeight * 0.05,
         borderRadius: 20,
         backgroundColor: '#FF9E5C',
         alignItems: "center",
-        zIndex: 1, // make sure the button is above other elements
+        zIndex: 10, // increased zIndex value to ensure it's always on top
     },
     backButtonText: {
         paddingTop: windowHeight * 0.004,
         fontSize: 24,
         color: Color.dimgray,
         fontWeight: "700",
-    },
-    loginButton: {
-        borderRadius: 80,
-        backgroundColor: Color.sandybrown,
-        width: '60%',
-        height: windowHeight * 0.09,
-        alignItems: "center",
-        justifyContent: "center",
-        alignSelf: "center",
-    },
-    loginButtonText: {
-        fontSize: windowHeight * 0.03,
-        letterSpacing: 0.3,
-        color: Color.white,
-        fontFamily: FontFamily.interExtrabold,
-        fontWeight: "800",
     },
     titleContainer: {
         alignItems: 'center',
@@ -294,20 +274,18 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     mapContainer: {
-        height: windowHeight * 0.3, // adjust the height as you need
+        height: windowHeight * 0.3,
         width: '93%',
         alignSelf: 'center',
         justifyContent: 'center',
         alignItems: 'center',
         marginVertical: 10,
     },
-
     map: {
         marginTop: '-10%',
         height: '100%',
         width: '100%',
     },
-
 });
 
 export default VetDetails;

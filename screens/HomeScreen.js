@@ -9,6 +9,7 @@ import LinearLoadingIndicator from '../components/LinearLoadingIndicator';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Geolocation from '@react-native-community/geolocation';
 import { request, PERMISSIONS } from 'react-native-permissions';
+import { debounce } from 'lodash';
 
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
@@ -37,12 +38,38 @@ const HomeScreen = () => {
   const [selectedType, setSelectedType] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [isLoadMore, setIsLoadMore] = useState(false);
+  const [isNearBottom, setIsNearBottom] = useState(false);
+  const [allItemsLoaded, setAllItemsLoaded] = useState(false);
+  const [showMessageModalVisible, setShowMessageModalVisible] = useState(false);
+
+  const ITEMS_PER_PAGE = 10;
+  let timeoutId = null;
 
   const handleSearch = (searchFilters) => {
     console.log('b4 set', filters)
     setFilters(searchFilters);
     console.log('after set', filters)
     setSelectedType(null); // Reset the selected type
+  };
+
+  const handleScroll = (event) => {
+    const offsetY = event.nativeEvent.contentOffset.y;
+    const contentHeight = event.nativeEvent.contentSize.height;
+    const screenHeight = event.nativeEvent.layoutMeasurement.height;
+
+    // Check if the user has scrolled to within 100 pixels of the bottom
+    if (offsetY + screenHeight + 100 >= contentHeight) {
+      if (!isNearBottom) {
+        setIsNearBottom(true);
+      }
+    } else {
+      if (isNearBottom) {
+        setIsNearBottom(false);
+      }
+    }
   };
 
 
@@ -70,36 +97,42 @@ const HomeScreen = () => {
           },
           error => {
             console.error(error);
+            setShowMessageModalVisible(true);  // Show the modal if there's an error fetching the location
           },
           { enableHighAccuracy: false, timeout: 15000, maximumAge: 10000 }
         );
-        console.log('GET USER LOCATION GRANTED')
+      } else {
+        setShowMessageModalVisible(true);  // Show the modal if the user denies permission
       }
     } catch (error) {
       console.error("Location permission error:", error);
+      setShowMessageModalVisible(true);  // Show the modal for any other errors
     }
   };
 
+
   //call userLocation hook when loaded
   useEffect(() => {
-    getUserLocation();
+    const init = async () => {
+      await getUserLocation();
+      fetchData(1);
+    };
+    init();
   }, []);
 
-  //call data hook when filters updated
   useEffect(() => {
-    console.log("useEffect triggered");
-    fetchData();
-  }, [filters]);
+    fetchData(1);
+  }, [filters, userLocation]);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData, userLocation]);
-
-
-  const fetchData = async () => {
+  const fetchData = async (page = 1, loadMore = false) => {
     let url;
     console.log("fetchData called");
-    console.log(Object.values(filters).some(value => value))
+
+    // If not loading more (i.e., refreshing or initial load), reset states
+    if (!loadMore) {
+      setCurrentPage(1);
+      setAllItemsLoaded(false);
+    }
 
     if (Object.values(filters).some(value => value !== null)) {
       url = `${SERVER_ADDRESS}/api/search_listings?`;
@@ -124,10 +157,23 @@ const HomeScreen = () => {
       }
     }
 
+    // Append the page number to the URL
+    if (url.includes('?')) {
+      url += `&page=${page}`;
+    } else {
+      url += `?page=${page}`;
+    }
 
     try {
       const response = await fetch(url);
       const json = await response.json();
+
+      // Check if the fetched data is less than the expected ITEMS_PER_PAGE
+      if (json.length < ITEMS_PER_PAGE) {
+        setAllItemsLoaded(true);
+      } else {
+        setAllItemsLoaded(false);  // Reset this in case filters change or user refreshes
+      }
 
       const updatedData = await Promise.all(json.map(async item => {
         if (item.listing.locationID) {
@@ -142,16 +188,37 @@ const HomeScreen = () => {
         return item;
       }));
 
-      setData(updatedData);
-
+      if (loadMore) {
+        setData(prevData => [...prevData, ...updatedData]);
+      } else {
+        setData(updatedData);
+      }
     } catch (error) {
       console.error(error);
     } finally {
       setRefreshing(false);
       setIsLoading(false);  // Set loading to false after data is fetched
+      setIsLoadMore(false);  // Reset the isLoadMore flag
     }
+
+
   }
 
+
+  const handleLoadMore = () => {
+    if (!loadingMore && !allItemsLoaded && data.length % ITEMS_PER_PAGE === 0) {
+      setLoadingMore(true);
+      fetchData(currentPage + 1, true).then(() => {
+        setCurrentPage(prevPage => prevPage + 1);
+        setLoadingMore(false);
+      });
+    }
+  };
+
+  const renderFooter = () => {
+    if (!loadingMore) return null;
+    return <ActivityIndicator size="large" color="#0000ff" />;
+  };
 
 
   const renderItem = ({ item }) => {
@@ -193,6 +260,26 @@ const HomeScreen = () => {
       <View style={styles.container}>
 
         <SearchModal modalVisible={modalVisible} setModalVisible={setModalVisible} onSearch={handleSearch} />
+
+        <Modal
+          animationType="fade"
+          transparent={true}
+          visible={showMessageModalVisible}
+        >
+          <View style={styles.messageModalContainer}>
+            <View style={styles.messageModalView}>
+              <Text style={styles.messageModalText}>Hey There!</Text>
+              <Text style= {{textAlign: 'center', marginTop: '5%'}}>Please turn on your location for the best experience! Dont worry, our dog staff wont steal your data!</Text>
+
+              <TouchableOpacity
+                onPress={() => setShowMessageModalVisible(false)}
+                style={styles.messageModalButton}
+              >
+                <Text style={styles.messageModalButtonText}>OK</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
 
         <Text style={styles.titleText}>Pawfect Home.</Text>
 
@@ -244,14 +331,17 @@ const HomeScreen = () => {
         </View>
 
         <FlatList
+          onScroll={handleScroll}
           data={dataWithPhotos}
           renderItem={renderItem}
           keyExtractor={item => item.pet.petID.toString()}
           numColumns={2}
-          onRefresh={fetchData}
+          onRefresh={() => fetchData()}
           refreshing={refreshing}
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.2}  // Load more when the user is halfway through the last set of items
+          ListFooterComponent={renderFooter}  // Render a loading indicator at the bottom
         />
-
 
       </View>
     );
@@ -316,6 +406,44 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     textAlign: "center",
     fontSize: 24,
+  },
+  messageModalText: {
+    fontSize: windowHeight * 0.03,
+    letterSpacing: 0.4,
+    color: Color.dimgray,
+    fontWeight: '900',
+    textAlign: 'center',
+  },
+  messageModalButtonText: {
+    fontSize: windowHeight * 0.03,
+    letterSpacing: 0.3,
+    color: Color.white,
+    fontFamily: FontFamily.interExtrabold,
+    fontWeight: "800",
+  },
+  messageModalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)'
+  },
+  messageModalView: {
+    width: '75%',
+    height: '25%',
+    backgroundColor: 'white',
+    padding: 20,
+    textAlign: 'center',
+    borderRadius: 30
+  },
+  messageModalButton: {
+    borderRadius: 87,
+    backgroundColor: Color.sandybrown,
+    width: '40%',
+    height: '30%',
+    marginTop: '5%',
+    alignItems: "center",
+    justifyContent: "center",
+    alignSelf: "center",
   },
   dropdownContainer: {
     marginBottom: 20,

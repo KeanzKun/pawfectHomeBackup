@@ -177,11 +177,6 @@ const styles = StyleSheet.create({
         fontWeight: "600",
         fontFamily: FontFamily.interSemibold,
     },
-    screen: {
-        flex: 5,
-        width: "90%",
-        alignItems: "flex-start",
-    },
     titleContainer: {
         flex: 1,
         paddingVertical: windowHeight * 0.025,

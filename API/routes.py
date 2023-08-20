@@ -437,15 +437,21 @@ def get_listing_location(locationID):
         return jsonify({'error': 'Location not found'}), 404
     return jsonify(location.to_dict()), 200
 
+ITEMS_PER_PAGE = 10
+
 @app.route('/api/listings', methods=['GET'])
 def get_listings():
+    page = request.args.get('page', 1, type=int)
+    offset = (page - 1) * ITEMS_PER_PAGE
     user_lat = request.args.get('latitude', type=float)  # Get user's latitude from request
     user_lon = request.args.get('longitude', type=float)  # Get user's longitude from request
-          
-    listings = Listing.query.filter(Listing.listing_status == 'active', Listing.listing_type != 'missing').all()
+
+    # Fetch all active listings that are not 'missing'
+    all_listings = Listing.query.filter(Listing.listing_status == 'active', Listing.listing_type != 'missing').all()
+
     result = []
 
-    for listing in listings:
+    for listing in all_listings:
         pet = Pets.query.get(listing.petID)
         if pet is None:
             continue
@@ -470,7 +476,11 @@ def get_listings():
     else:
         result.sort(key=lambda x: x['listing']['listingID'], reverse=True)
 
-    return jsonify(result), 200
+    # Apply pagination after sorting
+    paginated_result = result[offset: offset + ITEMS_PER_PAGE]
+
+    return jsonify(paginated_result), 200
+
 
 
 def haversine_distance(lat1, lon1, lat2, lon2):
@@ -636,13 +646,16 @@ def reset_password():
 
 @app.route('/api/listings/missing', methods=['GET'])
 def get_missing_listings():
+    page = request.args.get('page', default=1, type=int)
+    offset = (page - 1) * ITEMS_PER_PAGE
     latitude = request.args.get('latitude', default=0, type=float)
     longitude = request.args.get('longitude', default=0, type=float)
 
-    listings = Listing.query.filter_by(listing_type='missing').all()
+    # Fetch all listings with type 'missing'
+    all_listings = Listing.query.filter_by(listing_type='missing').all()
     result = []
 
-    for listing in listings:
+    for listing in all_listings:
         pet = Pets.query.get(listing.petID)  # assuming listing has petID attribute
         if pet is None:
             continue  # you can decide how you want to handle this scenario
@@ -667,7 +680,11 @@ def get_missing_listings():
     if latitude != 0 or longitude != 0:
         result.sort(key=lambda x: x['distance'] if x['distance'] is not None else float('inf'))
 
-    return jsonify(result), 200
+    # Apply pagination after sorting
+    paginated_result = result[offset: offset + ITEMS_PER_PAGE]
+
+    return jsonify(paginated_result), 200
+
 
 
 

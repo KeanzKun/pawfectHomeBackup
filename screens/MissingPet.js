@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, TextInput, Button, FlatList, Image, Modal, Animated, TouchableOpacity, Pressable, StyleSheet, Dimensions } from 'react-native';
+import {ActivityIndicator, View, Text, TextInput, Button, FlatList, Image, Modal, Animated, TouchableOpacity, Pressable, StyleSheet, Dimensions } from 'react-native';
 import { Color, FontFamily } from "../GlobalStyles";
 import { useNavigation } from '@react-navigation/native';
 import TextStroke from '../components/TextStroke';
@@ -31,6 +31,10 @@ const MissingPetScreen = () => {
   const [data, setData] = useState([]);  // Initializing state to hold pet data
   const [refreshing, setRefreshing] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [allItemsLoaded, setAllItemsLoaded] = useState(false);
+  const ITEMS_PER_PAGE = 10;
 
   const getUserLocation = async () => {
     try {
@@ -56,15 +60,27 @@ const MissingPetScreen = () => {
     getUserLocation();
   }, []);
 
+  const handleLoadMore = () => {
+    if (!loadingMore && !allItemsLoaded) {
+      setLoadingMore(true);
+      fetchData(currentPage + 1, true).then(() => {
+        setCurrentPage(prevPage => prevPage + 1);
+        setLoadingMore(false);
+      });
+    }
+  };
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (page = 1, loadMore = false) => {
     setRefreshing(true);
     let url = `${SERVER_ADDRESS}/api/listings/missing`;
 
     // Append user's latitude and longitude to the URL
     if (userLocation) {
-      url += `?latitude=${userLocation.latitude}&longitude=${userLocation.longitude}`;
+      url += (url.includes('?') ? '&' : '?') + `latitude=${userLocation.latitude}&longitude=${userLocation.longitude}`;
     }
+
+    // Append the page number to the URL
+    url += (url.includes('?') ? '&' : '?') + `page=${page}`;
 
     try {
       const response = await fetch(url);
@@ -83,8 +99,19 @@ const MissingPetScreen = () => {
         return item;
       }));
 
-      setData(updatedData);
+      if (json.length < ITEMS_PER_PAGE) {
+        setAllItemsLoaded(true);
+      }
 
+      if (loadMore) {
+        setData(prevData => [...prevData, ...updatedData]);
+      } else {
+        setData(updatedData);
+        if (!loadMore) {
+          setCurrentPage(1);
+          setAllItemsLoaded(false);
+        }
+      }
     } catch (error) {
       console.error(error);
     } finally {
@@ -140,6 +167,9 @@ const MissingPetScreen = () => {
         numColumns={2}
         onRefresh={fetchData}  // Add this line
         refreshing={refreshing}  // And this line
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.2}
+        ListFooterComponent={loadingMore ? <ActivityIndicator size="large" color="#0000ff" /> : null}
       />
     </View>
   );

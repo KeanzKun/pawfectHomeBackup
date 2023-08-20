@@ -6,6 +6,7 @@ import { SERVER_ADDRESS } from '../config';
 import SearchVetModal from '../components/SearchVetModal';
 import Geolocation from '@react-native-community/geolocation';
 import { request, PERMISSIONS } from 'react-native-permissions';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
@@ -18,9 +19,9 @@ const VetScreen = () => {
 
   useEffect(() => {
     fetchVets();
-}, [userLocation]);  // Add userLocation as a dependency
+  }, [userLocation]);  // Add userLocation as a dependency
 
-const getUserLocation = async () => {
+  const getUserLocation = async () => {
     try {
       const permission = await request(PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION);
       if (permission === 'granted') {
@@ -38,13 +39,13 @@ const getUserLocation = async () => {
     } catch (error) {
       console.error("Location permission error:", error);
     }
-};
-  
+  };
+
   useEffect(() => {
     getUserLocation();
   }, []);
 
-  
+
   const fetchVets = (state = null) => {
     let url = `${SERVER_ADDRESS}/api/vets`;
     const params = [];
@@ -57,7 +58,7 @@ const getUserLocation = async () => {
     if (params.length) {
       url += `?${params.join('&')}`;
     }
-    
+
     console.log(url)
 
     fetch(url)
@@ -65,7 +66,7 @@ const getUserLocation = async () => {
       .then((json) => setData(json))
       .catch((error) => console.error(error));
   };
-  
+
 
   const handleSearch = (filters) => {
     if (filters.vetState) {
@@ -80,8 +81,14 @@ const getUserLocation = async () => {
       onPress={() => navigation.navigate("VetDetails", { vetID: item.vetID })}>
       <View style={styles.itemTextContainer}>
         <Text style={styles.itemText}>{item.vet_name}</Text>
-        <Text style={styles.itemSubText}>{item.vet_hours}</Text>
-        <Text style={styles.itemSubText}>{item.vet_address}</Text>
+        <View style={{ flexDirection: 'row', marginBottom: '2%' }}>
+          <MaterialCommunityIcons name="store-clock-outline" color={Color.sandybrown} size={20} />
+          <Text style={styles.itemSubText}>{item.vet_hours}</Text>
+        </View>
+        <View style={{ flexDirection: 'row', marginBottom: '2%' }}>
+          <MaterialCommunityIcons name="map-marker-outline" color={Color.sandybrown} size={20} />
+          <Text style={styles.itemSubText}>{item.vet_address}</Text>
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -194,15 +201,15 @@ const styles = StyleSheet.create({
   itemText: {
     color: Color.dimgray,
     marginBottom: windowHeight * 0.009,
-    fontSize: 28,
+    fontSize: 22,
     letterSpacing: 0.4,
     fontWeight: '700',
   },
   itemSubText: {
     color: Color.dimgray,
     fontSize: 14,
-    color: Color.silver,
     letterSpacing: 0.4,
+    marginLeft: '2%'
   },
   searchContainer: {
     width: windowWidth * 0.9,
