@@ -19,7 +19,7 @@ const Login = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
   const [isLoadingVisible, setIsLoadingVisible] = useState(false);
-
+  const [userDetails, setUserDetails] = useState(null);
   useEffect(() => {
     // Handle the back button press event
     const handleBackPress = () => {
@@ -79,6 +79,7 @@ const Login = () => {
         } else if (userStatus === 'active') {
           // Store the token and navigate to Main
           await AsyncStorage.setItem('token', json.token);
+
           navigation.reset({
             index: 0,
             routes: [{ name: 'Main' }],

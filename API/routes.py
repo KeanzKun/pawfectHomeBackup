@@ -662,10 +662,11 @@ def validate_password():
     current_password = request.json['current_password']
 
     user = User.query.filter(User.userID == user_id).first()
-    if user and (user.user_password == current_password):
+    if user and bcrypt.check_password_hash(user.user_password, current_password):
         return jsonify({'valid': True}), 200
     else:
         return jsonify({'valid': False, 'message': 'Current password does not match'}), 400
+
 
 @app.route('/api/listings/<int:listingID>', methods=['GET'])
 def get_listing(listingID):
@@ -759,13 +760,14 @@ def add_listing():
         listing_date=data['listing_date'],
         listing_status=data['listing_status']
     )
+    
     db.session.add(new_listing)
     db.session.commit()
     return jsonify({'listingID': new_listing.listingID}), 200
 
 
 
-if __name__ == '__main__':
-    app.run(debug=True)
 # if __name__ == '__main__':
-#     app.run(host='192.168.0.127', debug=True)
+#     app.run(debug=True)
+if __name__ == '__main__':
+    app.run(host='192.168.0.127', debug=True)

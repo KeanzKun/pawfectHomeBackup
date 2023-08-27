@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, View, BackHandler, Text, TextInput, Button, FlatList, Image, Modal, Animated, TouchableOpacity, Pressable, StyleSheet, Dimensions } from 'react-native';
+import { Alert, ActivityIndicator, View, BackHandler, Text, TextInput, Button, FlatList, Image, Modal, Animated, TouchableOpacity, Pressable, StyleSheet, Dimensions } from 'react-native';
 import { Color, FontFamily } from "../GlobalStyles";
 import { useNavigation } from '@react-navigation/native';
 import TextStroke from '../components/TextStroke';
@@ -10,6 +10,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import Geolocation from '@react-native-community/geolocation';
 import { request, PERMISSIONS } from 'react-native-permissions';
 import { debounce } from 'lodash';
+import { fetchUserDetails, getStoredUserID } from '../components/UserService';
 
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
@@ -44,7 +45,8 @@ const HomeScreen = () => {
   const [isNearBottom, setIsNearBottom] = useState(false);
   const [allItemsLoaded, setAllItemsLoaded] = useState(false);
   const [showMessageModalVisible, setShowMessageModalVisible] = useState(false);
-
+  const [userDetails, setUserDetails] = useState(null);
+  
   const ITEMS_PER_PAGE = 10;
   let timeoutId = null;
 
@@ -87,6 +89,8 @@ const HomeScreen = () => {
   //get user location
   const getUserLocation = async () => {
     try {
+      console.log('RAN THIS');
+
       const permission = await request(PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION);
 
       if (permission === 'granted') {
@@ -269,7 +273,7 @@ const HomeScreen = () => {
           <View style={styles.messageModalContainer}>
             <View style={styles.messageModalView}>
               <Text style={styles.messageModalText}>Hey There!</Text>
-              <Text style= {{textAlign: 'center', marginTop: '5%'}}>Please turn on your location for the best experience! Dont worry, our dog staff wont steal your data!</Text>
+              <Text style={{ textAlign: 'center', marginTop: '5%' }}>Please turn on your location for the best experience! Dont worry, our dog staff wont steal your data!</Text>
 
               <TouchableOpacity
                 onPress={() => setShowMessageModalVisible(false)}

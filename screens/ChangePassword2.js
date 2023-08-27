@@ -14,16 +14,25 @@ const ChangePassword2 = () => {
     // State variables to hold the new password and confirmed password
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [passwordValid, setPasswordValid] = useState(true);
+    const [isPasswordMatch, setIsPasswordMatch] = useState(true);
+
 
     const handleNewPasswordChange = (text) => {
         setNewPassword(text);
-        setPasswordValid(isPasswordValid(text));
+        setPasswordValid(isPasswordValid(text));  // Use the isPasswordValid function here
         setIsPasswordMatch(text === confirmPassword);
     };
+    
 
     const handleConfirmPasswordChange = (text) => {
         setConfirmPassword(text);
         setIsPasswordMatch(newPassword === text);
+    };
+
+    const isPasswordValid = (password) => {
+        const regex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#.,<>[\]])[A-Za-z\d@$!%*?&#.,<>[\]]{8,}$/;
+        return regex.test(password);
     };
 
     const handleBackPress = () => {

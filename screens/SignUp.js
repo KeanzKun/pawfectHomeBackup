@@ -59,6 +59,8 @@ const SignUp = () => {
 
     const validateEmail = async (email) => {
         setUserEmail(email)
+        setEmailValid(true)
+        setIsDisposableDomain(false)
         const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
         if (emailPattern.test(email)) {
             // Check if the email is disposable
@@ -176,8 +178,8 @@ const SignUp = () => {
 
 
     const checkUsernameValid = (text) => {
-        // Only allow alphanumeric characters, underscores, and hyphens
-        if (/^[a-zA-Z0-9-_]*$/.test(text)) {
+        // Only allow alphanumeric characters, underscores, hyphens, and spaces
+        if (/^[a-zA-Z0-9-_ ]*$/.test(text)) {
             setUserName(text);
             setUsernameValid(true);
         }
@@ -185,9 +187,10 @@ const SignUp = () => {
             setUsernameValid(false)
     }
 
+
     const handlePasswordChange = (text) => {
         setPassword(text);
-        setPasswordValid(isPasswordValid(text)); 
+        setPasswordValid(isPasswordValid(text));
         console.log(isPasswordValid(text))
         setPasswordMatch(text === confirmPassword);
     };

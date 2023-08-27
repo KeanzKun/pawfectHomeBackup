@@ -23,6 +23,7 @@ const CreateListing2 = ({ route }) => {
     const [imageNames, setImageNames] = useState([]);
     const [modalVisible, setModalVisible] = useState(false);
     const [enlargedImageUrl, setEnlargedImageUrl] = useState(null);
+    const [userDetails, setUserDetails] = useState(null);
     const [userID, setUserID] = useState(null);
 
     const requestStoragePermission = async () => {
@@ -35,7 +36,7 @@ const CreateListing2 = ({ route }) => {
 
     function getCurrentTimestamp() {
         const date = new Date();
-    
+
         const YYYY = date.getFullYear();
         const MM = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
         const DD = String(date.getDate()).padStart(2, '0');
@@ -43,18 +44,20 @@ const CreateListing2 = ({ route }) => {
         const mm = String(date.getMinutes()).padStart(2, '0');
         const ss = String(date.getSeconds()).padStart(2, '0');
         const ms = String(date.getMilliseconds()).padStart(3, '0'); // padStart with 3 zeros for milliseconds
-    
+
         return `${YYYY}${MM}${DD}${hh}${mm}${ss}${ms}`;
     }
 
     useEffect(() => {
-        const fetchUserID = async () => {
-            const storedUserID = await getStoredUserID();
-            setUserID(storedUserID);
-        };
-
-        fetchUserID();
+        fetchUserDetails((details) => {
+            setUserDetails(details);
+            if (details && details.user) {
+                setUserID(details.user.userID);
+            }
+        });
     }, []);
+
+
 
     const chooseImage = () => {
         if (userImages.length >= 5) {
@@ -108,6 +111,7 @@ const CreateListing2 = ({ route }) => {
     };
 
     const handleSubmission = async () => {
+
         // Check if any images are uploaded
         if (userImages.length === 0) {
             alert("Please upload at least one image before proceeding.");
@@ -117,7 +121,7 @@ const CreateListing2 = ({ route }) => {
         let tempImageNames = []; // Temporary array to store image names
         for (let image of userImages) {
             try {
-                
+
                 if (!userID) {
                     alert("Something went wrong. Please try again.");
                     return;
