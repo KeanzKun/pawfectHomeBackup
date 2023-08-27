@@ -155,7 +155,6 @@ const ForgotPassword2 = ({ route }) => {
                     }
 
                 </View>
-
             </View>
 
             <View style={styles.buttonFrame}>

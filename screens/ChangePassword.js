@@ -41,7 +41,6 @@ const ChangePassword = () => {
 
                 body: JSON.stringify({ current_password: currentPassword })
             });
-            console.log(currentPassword);
             const result = await response.json();
 
             if (response.status === 200) {

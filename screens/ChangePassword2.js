@@ -15,19 +15,30 @@ const ChangePassword2 = () => {
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
 
+    const handleNewPasswordChange = (text) => {
+        setNewPassword(text);
+        setPasswordValid(isPasswordValid(text));
+        setIsPasswordMatch(text === confirmPassword);
+    };
+
+    const handleConfirmPasswordChange = (text) => {
+        setConfirmPassword(text);
+        setIsPasswordMatch(newPassword === text);
+    };
+
     const handleBackPress = () => {
         // Construct the navigation action to target the nested navigator
         navigation.dispatch(
-          CommonActions.navigate({
-            name: 'Main', // The name of the screen that hosts the bottom tab navigator
-            params: {
-              screen: 'AccountSetting', // The name of the target screen inside the bottom tab navigator
-            },
-          })
+            CommonActions.navigate({
+                name: 'Main', // The name of the screen that hosts the bottom tab navigator
+                params: {
+                    screen: 'AccountSetting', // The name of the target screen inside the bottom tab navigator
+                },
+            })
         );
-      
+
         return true; // Return true to prevent the default back action
-      };
+    };
 
     // Use the useFocusEffect hook to add the custom back handler when the screen is focused
     useFocusEffect(
@@ -45,11 +56,16 @@ const ChangePassword2 = () => {
     // Function to handle the password update
     const handleUpdatePassword = async () => {
 
-
-        if (newPassword !== confirmPassword) {
-            Alert.alert('Error', 'Passwords do not match');
+        //Validate the passwords
+        if (newPassword === '' || confirmPassword === '') {
+            Alert.alert('Error', 'Both password fields must be filled in.');
             return;
         }
+
+        if (!passwordValid || !isPasswordMatch) {
+            Alert.alert('Error', 'Please meet all the criteria.');
+        }
+
         const token = await AsyncStorage.getItem('token'); // Retrieve token
 
         try {
@@ -97,21 +113,23 @@ const ChangePassword2 = () => {
                     <View style={styles.inputFieldContainer}>
                         <Text style={styles.inputLabel}>New Password</Text>
                         <Input
+                            secureTextEntry={true}
+                            onChangeText={handleNewPasswordChange}
                             required={true}
                             inputStyle={styles.inputText}
-                            onChangeText={text => setNewPassword(text)} // Update the state with the input
-                            secureTextEntry={true}
                         />
+                        {!passwordValid && <Text style={styles.warningText}>Password must be at least 8 characters, contain 1 number, 1 special character, and 1 capital letter.</Text>}
                     </View>
 
                     <View style={styles.inputFieldContainer}>
                         <Text style={styles.inputLabel}>Confirm Password</Text>
                         <Input
+                            secureTextEntry={true}
+                            onChangeText={handleConfirmPasswordChange}
                             required={true}
                             inputStyle={styles.inputText}
-                            onChangeText={text => setConfirmPassword(text)} // Update the state with the input
-                            secureTextEntry={true}
                         />
+                        {!isPasswordMatch && <Text style={styles.warningText}>Passwords do not match.</Text>}
                     </View>
                 </View>
                 <View style={styles.buttonFrame}>
@@ -204,6 +222,12 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: "center",
         width: "100%",
+    },
+    warningText: {
+        color: Color.sandybrown,
+        marginLeft: windowHeight * 0.015,
+        marginTop: windowHeight * -0.03,
+        marginBottom: windowHeight * 0.0055
     },
 });
 

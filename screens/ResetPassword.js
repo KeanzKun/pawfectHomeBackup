@@ -6,10 +6,28 @@ import { Color, FontFamily } from "../GlobalStyles";
 import { SERVER_ADDRESS } from "../config";
 const windowHeight = Dimensions.get("window").height;
 
-const ResetPassword = ({ route }) => {    
+const ResetPassword = ({ route }) => {
     const navigation = useNavigation();
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [passwordValid, setPasswordValid] = useState(true);
+    const [isPasswordMatch, setIsPasswordMatch] = useState(true);
+
+    const isPasswordValid = (password) => {
+        const regex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#.,<>[\]])[A-Za-z\d@$!%*?&#.,<>[\]]{8,}$/;
+        return regex.test(password);
+    };
+
+    const handleNewPasswordChange = (text) => {
+        setNewPassword(text);
+        setPasswordValid(isPasswordValid(text));
+        setIsPasswordMatch(text === confirmPassword);
+    };
+
+    const handleConfirmPasswordChange = (text) => {
+        setConfirmPassword(text);
+        setIsPasswordMatch(newPassword === text);
+    };
 
     const handleResetPassword = () => {
         // Validate the passwords
@@ -17,9 +35,9 @@ const ResetPassword = ({ route }) => {
             Alert.alert('Error', 'Both password fields must be filled in.');
             return;
         }
-        if (newPassword !== confirmPassword) {
-            Alert.alert('Error', 'Passwords do not match.');
-            return;
+
+        if (!passwordValid || !isPasswordMatch) {
+            Alert.alert('Error', 'Please meet all the criteria.');
         }
 
         // Make the API call to update the password
@@ -33,7 +51,7 @@ const ResetPassword = ({ route }) => {
         })
             .then((res) => res.json())
             .then((data) => {
-                    navigation.navigate('PasswordChanged'); // Redirect to login on successful password update
+                navigation.navigate('PasswordChanged'); // Redirect to login on successful password update
             })
             .catch((error) => Alert.alert('Error', error));
     };
@@ -77,21 +95,24 @@ const ResetPassword = ({ route }) => {
                         <Text style={styles.inputLabel}>New Password</Text>
                         <Input
                             secureTextEntry={true}
-                            onChangeText={value => setNewPassword(value)}
+                            onChangeText={handleNewPasswordChange}
                             required={true}
                             inputStyle={styles.inputText}
                         />
+                        {!passwordValid && <Text style={styles.warningText}>Password must be at least 8 characters, contain 1 number, 1 special character, and 1 capital letter.</Text>}
                     </View>
 
                     <View style={styles.inputFieldContainer}>
                         <Text style={styles.inputLabel}>Confirm Password</Text>
                         <Input
                             secureTextEntry={true}
-                            onChangeText={value => setConfirmPassword(value)}
+                            onChangeText={handleConfirmPasswordChange}
                             required={true}
                             inputStyle={styles.inputText}
                         />
+                        {!isPasswordMatch && <Text style={styles.warningText}>Passwords do not match.</Text>}
                     </View>
+
 
                 </View>
 
@@ -192,6 +213,12 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: "center",
         width: "100%",
+    },
+    warningText: {
+        color: Color.sandybrown,
+        marginLeft: windowHeight * 0.015,
+        marginTop: windowHeight * -0.03,
+        marginBottom: windowHeight * 0.0055
     },
 });
 

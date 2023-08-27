@@ -48,9 +48,9 @@ def forgotPassword_check_email():
     else:
         return jsonify(exists=False), 200
 
-
-@app.route('/api/reregister', methods=['POST'])
-def reregister():
+#Register account
+@app.route('/api/register', methods=['POST'])
+def register():
     # Get the required information from the request body
     user_name = request.json['user_name']
     user_email = request.json['user_email']
@@ -111,7 +111,6 @@ def send_email():
     data = request.get_json()
     email = data.get('email')
     
-    print(email)
     # Generate a random 6-digit code
     code = ''.join([str(random.randint(0, 9)) for _ in range(6)])
 
@@ -231,37 +230,6 @@ def get_user_id():
     token = request.headers['Authorization'].split(' ')[1] # Assuming token is in 'Bearer token' format
     decoded_token = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
     return decoded_token['user_id']
-
-@app.route('/api/register', methods=['POST'])
-def register():
-    # Get the required information from the request body
-    user_name = request.json['user_name']
-    user_email = request.json['user_email']
-    user_password = request.json['user_password']  # Front-end sends the field as user_password
-    contact_number = request.json['contact_number']
-    user_status = 'unverified'
-
-    # Check if the email is already registered
-    existing_user = User.query.filter_by(user_email=user_email).first()
-    if existing_user:
-        return jsonify({'message': 'Email address already registered'}), 400
-
-    # No need to hash the password, store as plain text
-    # Create the User object
-    new_user = User(
-        user_name=user_name,
-        user_email=user_email,
-        user_password=user_password,  # Storing the password in plain text
-        contact_number=contact_number,
-        user_status=user_status
-    )
-
-    # Add the new user to the database
-    db.session.add(new_user)
-    db.session.commit()
-
-    return jsonify({'message': 'User registered successfully'}), 200
-
 
 @app.route('/api/vets', methods=['GET'])
 def get_vets():
@@ -620,28 +588,28 @@ def change_password():
 
     user = User.query.filter(User.userID == user_id).first()
     if user:
-        #hashed_password = generate_password_hash(new_password, method='sha256')
-        #user.user_password = hashed_password
-        user.user_password = new_password
+        hashed_password = bcrypt.generate_password_hash(new_password).decode('utf-8')
+        user.user_password = hashed_password
         db.session.commit()
         return jsonify({'message': 'Password updated successfully'}), 200
     else:
         return jsonify({'message': 'User not found'}), 404
 
+
 @app.route('/api/reset-password', methods=['POST'])
 def reset_password():
-    user_email =  request.json['email'] 
+    user_email = request.json['email']
     new_password = request.json['newPassword']
 
     user = User.query.filter(User.user_email == user_email).first()
     if user:
-        #hashed_password = generate_password_hash(new_password, method='sha256')
-        #user.user_password = hashed_password
-        user.user_password = new_password
+        hashed_password = bcrypt.generate_password_hash(new_password).decode('utf-8')
+        user.user_password = hashed_password
         db.session.commit()
         return jsonify({'message': 'Password updated successfully'}), 200
     else:
         return jsonify({'message': 'User not found'}), 404
+
     
 
 @app.route('/api/listings/missing', methods=['GET'])
@@ -797,52 +765,7 @@ def add_listing():
 
 
 
-# if __name__ == '__main__':
-#     app.run(debug=True)
 if __name__ == '__main__':
-    app.run(host='192.168.0.127', debug=True)
-
-# @app.route('/api/login', methods=['POST'])
-# def login():
-#     userEmail = request.json['user_email']
-#     password = request.json['password']
-    
-#     # Fetch the user by email
-#     user = User.query.filter(User.user_email == userEmail).first()
-#     if user and user.user_password == password: # Compare plain text passwords
-#         # Return user details if email and password are correct
-#         return jsonify({'message': 'Login successful', 'user': user.to_dict()}), 200
-#     else:
-#         return jsonify({'message': 'Invalid credentials'}), 401
-
-# @app.route('/api/register', methods=['POST'])
-# def register():
-#     # Get the required information from the request body
-#     user_name = request.json['user_name']
-#     user_email = request.json['user_email']
-#     user_password = request.json['user_password']  # Front-end sends the field as user_password
-#     contact_number = request.json['contact_number']
-#     user_status = 'unverified'
-
-#     # Check if the email is already registered
-#     existing_user = User.query.filter_by(user_email=user_email).first()
-#     if existing_user:
-#         return jsonify({'message': 'Email address already registered'}), 400
-
-#     # Hash the password
-#     hashed_password = generate_password_hash(user_password, method='sha256')
-
-#     # Create the User object
-#     new_user = User(
-#         user_name=user_name,
-#         user_email=user_email,
-#         user_password=hashed_password,
-#         contact_number=contact_number,
-#         user_status=user_status
-#     )
-
-#     # Add the new user to the database
-#     db.session.add(new_user)
-#     db.session.commit()
-
-#     return jsonify({'message': 'User registered successfully'}), 200
+    app.run(debug=True)
+# if __name__ == '__main__':
+#     app.run(host='192.168.0.127', debug=True)

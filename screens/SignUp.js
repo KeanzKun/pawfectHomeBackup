@@ -230,7 +230,7 @@ const SignUp = () => {
         }
 
         try {
-            const response = await fetch(`${SERVER_ADDRESS}/api/reregister`, {
+            const response = await fetch(`${SERVER_ADDRESS}/api/register`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
