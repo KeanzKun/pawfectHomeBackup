@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { Alert, Text, StyleSheet, TouchableOpacity, Pressable, View, Image, ScrollView, TouchableHighlight, FlatList, Dimensions } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Color, FontFamily } from "../GlobalStyles";
-import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import { check, PERMISSIONS, RESULTS, request } from 'react-native-permissions';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import ImageResizer from 'react-native-image-resizer';
@@ -12,7 +11,8 @@ import { PET_IMG } from "../config"; // Import your config
 import { SERVER_ADDRESS } from "../config";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchUserDetails, getStoredUserID } from "../components/UserService";
-
+import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
+import LinearLoadingIndicator from "../components/LinearLoadingIndicator";
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
 
@@ -25,6 +25,7 @@ const CreateListing2 = ({ route }) => {
     const [enlargedImageUrl, setEnlargedImageUrl] = useState(null);
     const [userDetails, setUserDetails] = useState(null);
     const [userID, setUserID] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
 
     const requestStoragePermission = async () => {
         const result = await request(PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE);
@@ -32,6 +33,30 @@ const CreateListing2 = ({ route }) => {
             return true;
         }
         return false;
+    };
+
+    const requestCameraPermission = async () => {
+        try {
+            const result = await request(PERMISSIONS.ANDROID.CAMERA);
+
+            switch (result) {
+                case RESULTS.UNAVAILABLE:
+                    console.log('This feature is not available (on this device / in this context)');
+                    return false;
+                case RESULTS.DENIED:
+                    console.log('The permission has not been requested / is denied but requestable');
+                    return false;
+                case RESULTS.GRANTED:
+                    console.log('The permission is granted');
+                    return true;
+                case RESULTS.BLOCKED:
+                    console.log('The permission is denied and not requestable anymore');
+                    return false;
+            }
+        } catch (error) {
+            console.log('Permission request error:', error);
+            return false;
+        }
     };
 
     function getCurrentTimestamp() {
@@ -57,7 +82,39 @@ const CreateListing2 = ({ route }) => {
         });
     }, []);
 
+    const openCamera = async () => {
+        console.log('OPEN CAMERA');
 
+        const hasPermission = await requestCameraPermission();
+        if (!hasPermission) {
+            console.log('Camera permission denied');
+            return;
+        }
+
+        const options = {
+            storageOptions: {
+                skipBackup: true,
+                path: 'images',
+            },
+        };
+
+        launchCamera(options, async (response) => {
+            console.log('LAUNCH CAMERA');
+
+            // Handle the response here
+            if (response.didCancel) {
+                console.log('User cancelled camera picker');
+            } else if (response.error) {
+                console.log('ImagePicker Error: ', response.error);
+            } else if (response.assets && response.assets[0] && response.assets[0].uri) {
+                const source = { uri: response.assets[0].uri };
+                console.log('ELSE IF LAST');
+
+                setUserImages(prevImages => [...prevImages, source]);
+            }
+            console.log('EXIT IF');
+        });
+    };
 
     const chooseImage = () => {
         if (userImages.length >= 5) {
@@ -71,44 +128,78 @@ const CreateListing2 = ({ route }) => {
                 skipBackup: true,
                 path: 'images',
             },
+            selectionLimit: 2,
         };
 
-        launchImageLibrary(options, async (response) => {
-            if (response.didCancel) {
-                console.log('User cancelled image picker');
-            } else if (response.error) {
-                console.log('ImagePicker Error: ', response.error);
-            } else if (response.assets && response.assets[0] && response.assets[0].uri) {
-                const originalWidth = response.assets[0].width;
-                const originalHeight = response.assets[0].height;
-
-                // Define the percentage to resize
-                const resizePercentage = 0.6;  // 50%
-
-                // Calculate new dimensions
-                const newWidth = originalWidth * resizePercentage;
-                const newHeight = originalHeight * resizePercentage;
-
-                try {
-                    // Resize and compress the image
-                    const resizedImage = await ImageResizer.createResizedImage(
-                        response.assets[0].uri,
-                        newWidth,
-                        newHeight,
-                        'JPEG',  // format
-                        90  // compression quality
-                    );
-
-                    const source = { uri: resizedImage.uri };
-                    setUserImages(prevImages => [...prevImages, source]);
-                } catch (error) {
-                    console.log("Error resizing the image: ", error);
+        Alert.alert(
+            'Upload Photo',
+            'Choose the source',
+            [
+                {
+                    text: 'Camera',
+                    onPress: () => openCamera()
+                },
+                {
+                    text: 'Gallery',
+                    onPress: () => launchImageLibrary(options, handleImageResponse)
+                },
+                {
+                    text: 'Cancel',
+                    style: 'cancel'
                 }
-            };
-
-
-        });
+            ],
+            { cancelable: true }
+        );
     };
+
+    const handleImageResponse = async (response) => {
+        if (response.didCancel) {
+            console.log('User cancelled image picker');
+        } else if (response.error) {
+            console.log('ImagePicker Error: ', response.error);
+        } else if (response.assets) {
+            const newImages = [];
+
+            if ((response.assets.length + userImages.length > 5)) {
+                Alert.alert('Hey', 'You can upload maximum 5 photos')
+                return;
+            }
+
+            for (let asset of response.assets) {
+                if (asset.uri) {
+                    const originalWidth = asset.width;
+                    const originalHeight = asset.height;
+
+                    // Define the percentage to resize
+                    const resizePercentage = 0.6;  // 60%
+
+                    // Calculate new dimensions
+                    const newWidth = originalWidth * resizePercentage;
+                    const newHeight = originalHeight * resizePercentage;
+
+                    try {
+                        // Resize and compress the image
+                        const resizedImage = await ImageResizer.createResizedImage(
+                            asset.uri,
+                            newWidth,
+                            newHeight,
+                            'JPEG',  // format
+                            90  // compression quality
+                        );
+
+                        const source = { uri: resizedImage.uri };
+                        newImages.push(source);
+                    } catch (error) {
+                        console.log("Error resizing the image: ", error);
+                    }
+                }
+            }
+
+            // Update the state with the new images
+            setUserImages(prevImages => [...prevImages, ...newImages]);
+        }
+    };
+
 
     const handleSubmission = async () => {
 
@@ -117,6 +208,8 @@ const CreateListing2 = ({ route }) => {
             alert("Please upload at least one image before proceeding.");
             return;
         }
+
+        setIsLoading(true);
         // Generate image names and upload images
         let tempImageNames = []; // Temporary array to store image names
         for (let image of userImages) {
@@ -144,6 +237,7 @@ const CreateListing2 = ({ route }) => {
                     body: formData
                 });
             } catch (error) {
+                setIsLoading(false)
                 console.error("Failed to upload image", image, error);
             }
         }
@@ -170,6 +264,7 @@ const CreateListing2 = ({ route }) => {
         let petData = await petResponse.json();
 
         if (!petResponse.ok) {
+            setIsLoading(false)
             Alert.alert('Uh Oh!', 'Something went wrong, our dog ate the data, please try again')
             return;
         }
@@ -187,6 +282,7 @@ const CreateListing2 = ({ route }) => {
         });
 
         if (!petOwnerResponse.ok) {
+            setIsLoading(false)
             Alert.alert('Uh Oh!', 'Something went wrong, our dog ate the data, please try again')
             return;
         }
@@ -207,6 +303,7 @@ const CreateListing2 = ({ route }) => {
         let locationData = await locationResponse.json();
 
         if (!locationResponse.ok) {
+            setIsLoading(false)
             Alert.alert('Uh Oh!', 'Something went wrong, dog ate the data, please try again')
             return;
         }
@@ -230,10 +327,11 @@ const CreateListing2 = ({ route }) => {
         });
 
         if (!listingResponse.ok) {
+            setIsLoading(false)
             Alert.alert('Uh Oh!', 'Something went wrong, dog ate the data, please try again')
             return;
         }
-
+        setIsLoading(false)
         navigation.navigate("CreateListing3");
 
     };
@@ -327,6 +425,16 @@ const CreateListing2 = ({ route }) => {
                 imageUrl={enlargedImageUrl}
             />
 
+            {isLoading && (
+                <View style={styles.loadingOverlay}>
+                    <Image source={require('../assets/icon/cat-typing.gif')} style={{ width: '28%', height: '8%', marginBottom: '3%' }} />
+                    <Text style={{ color: Color.sandybrown, fontSize: 20 }}>Please wait while our furry staff</Text>
+                    <Text style={{ color: Color.sandybrown, fontSize: 20, marginBottom: '5%' }}>working on it...</Text>
+                    <View style={{ width: '50%', overflow: 'hidden' }}>
+                        <LinearLoadingIndicator></LinearLoadingIndicator>
+                    </View>
+                </View>
+            )}
         </View>
 
     );
@@ -469,6 +577,18 @@ const styles = StyleSheet.create({
         alignItems: "center",
         width: "100%",
     },
+    loadingOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.8)', // Semi-transparent white background
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 1000, // Ensure it's on top
+    }
+
 });
 
 export default CreateListing2;

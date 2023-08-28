@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import {BackHandler, Alert, Text, StyleSheet, Pressable, View, ScrollView, TouchableHighlight, Dimensions } from "react-native";
+import { BackHandler, Alert, Text, StyleSheet, Pressable, View, ScrollView, TouchableHighlight, Dimensions } from "react-native";
 import { Button, Input } from "@rneui/themed";
 import { useNavigation } from "@react-navigation/native";
 import { Color, FontFamily } from "../GlobalStyles";
@@ -19,20 +19,26 @@ const EditProfile = () => {
     useEffect(() => {
         // Handle the back button press event
         const handleBackPress = () => {
-          navigation.goBack(); // Exit the app
-          return true; // Prevent default behavior
+            navigation.goBack(); // Exit the app
+            return true; // Prevent default behavior
         };
-    
+
         // Add the event listener
         BackHandler.addEventListener('hardwareBackPress', handleBackPress);
-    
+
         // Return a cleanup function to remove the event listener
         return () => {
-          BackHandler.removeEventListener('hardwareBackPress', handleBackPress);
+            BackHandler.removeEventListener('hardwareBackPress', handleBackPress);
         };
-      }, []);
+    }, []);
 
     const updateUsername = async () => {
+
+        if (!userDetails.userName.trim()) {
+            Alert.alert('Error', 'Username cannot be empty');
+            return;
+        }
+
         const token = await AsyncStorage.getItem('token');
         fetch(`${SERVER_ADDRESS}/api/update-userName`, {
             method: 'POST',
@@ -123,14 +129,14 @@ const EditProfile = () => {
                 </View>
             </View>
             <View style={styles.redirectSignUp}>
-                    <TouchableHighlight
-                        style={styles.loginButton}
-                        onPress={updateUsername} // Call the update function on press
-                        underlayColor={Color.sandybrown}
-                    >
-                        <Text style={styles.loginButtonText}>Submit</Text>
-                    </TouchableHighlight>
-                </View>
+                <TouchableHighlight
+                    style={styles.loginButton}
+                    onPress={updateUsername} // Call the update function on press
+                    underlayColor={Color.sandybrown}
+                >
+                    <Text style={styles.loginButtonText}>Submit</Text>
+                </TouchableHighlight>
+            </View>
         </ScrollView>
     );
 };

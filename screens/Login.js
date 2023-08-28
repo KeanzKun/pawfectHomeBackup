@@ -153,6 +153,7 @@ const Login = () => {
             <Input
               placeholder="Email" // Updated placeholder
               required={true}
+              autoCapitalize="none"
               onChangeText={text => setUserEmail(text)}
               leftIcon={{ name: "email", type: "material-community" }} // Updated icon
               inputStyle={styles.usernameInput}
@@ -163,6 +164,7 @@ const Login = () => {
             <Input
               placeholder="Password"
               required={true}
+              autoCapitalize="none"
               onChangeText={text => setPassword(text)}
               leftIcon={{ name: "lock", type: "material-community" }}
               inputStyle={styles.passwordInput}

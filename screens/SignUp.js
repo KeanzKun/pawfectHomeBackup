@@ -201,9 +201,10 @@ const SignUp = () => {
     };
 
     const isPasswordValid = (password) => {
-        const regex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#.,<>[\]])[A-Za-z\d@$!%*?&#.,<>[\]]{8,}$/;
+        const regex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#_.,<>[\]])[A-Za-z\d@$!%*?&#_.,<>[\]]{8,}$/;
         return regex.test(password);
     };
+    
 
     //Called by handleSignUp, send verification code to user
     const handleRequestCode = () => {
@@ -301,6 +302,7 @@ const SignUp = () => {
                         <Input
                             value={userName}
                             required={true}
+                            autoCapitalize="none"
                             onChangeText={text => {
                                 checkUsernameValid(text)
                             }}
@@ -311,6 +313,7 @@ const SignUp = () => {
                         <Text style={styles.emailLabel}>Email</Text>
                         <Input
                             value={userEmail}
+                            autoCapitalize="none"
                             required={true}
                             onChangeText={text => validateEmail(text)} // async call is inside the function
                             inputStyle={styles.usernameInput}
@@ -322,6 +325,7 @@ const SignUp = () => {
                         <Input
                             value={password}
                             required={true}
+                            autoCapitalize="none"
                             onChangeText={handlePasswordChange}
                             inputStyle={styles.usernameInput}
                             secureTextEntry={true}
@@ -333,6 +337,7 @@ const SignUp = () => {
                         <Input
                             value={confirmPassword}
                             required={true}
+                            autoCapitalize="none"
                             onChangeText={handleConfirmPasswordChange} // Call the handleConfirmPasswordChange function
                             inputStyle={styles.usernameInput}
                             secureTextEntry={true}
