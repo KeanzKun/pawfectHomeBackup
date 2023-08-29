@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {TextInput,  Text, StyleSheet, TouchableOpacity, View, ScrollView, TouchableHighlight, Dimensions, KeyboardAvoidingView, Platform } from "react-native";
+import { TextInput, Text, StyleSheet, TouchableOpacity, View, ScrollView, TouchableHighlight, Dimensions, KeyboardAvoidingView, Platform } from "react-native";
 import { Button, Input } from "@rneui/themed";
 import { useNavigation } from "@react-navigation/native";
 import { Color, FontFamily } from "../GlobalStyles";
@@ -28,7 +28,7 @@ const CreateListing = () => {
     const [petName, setPetName] = useState('');
     const [petGender, setPetGender] = useState('');
     const [description, setDescription] = useState('');
-
+    const [isLostFee, setIsLostFee] = useState(false);
     function dateFormatter(dateObj) {
         const yyyy = dateObj.getFullYear();
         const mm = String(dateObj.getMonth() + 1).padStart(2, '0'); // January is 0!
@@ -43,10 +43,21 @@ const CreateListing = () => {
             alert('Please fill in all fields.');
             return false;
         }
+        if (listingType === 'adopt' || listingType === 'reHome') {
+            if (parseInt(adoptionFee) < 50 || parseInt(adoptionFee) > 400) {
+                alert('Adoption Fee needs to be between 50 and 400.');
+                return false;
+            }
+        }
 
-        if (parseInt(adoptionFee) < 50 || parseInt(adoptionFee) > 400) {
-            alert('Adoption Fee needs to be between 50 and 400.');
-            return false;
+        // For 'missing' listing type, you can add additional validations if needed
+        if (listingType === 'missing') {
+            if (adoptionFee === '') {
+                setAdoptionFee('0');
+            } else if (parseInt(adoptionFee) > 9999) {
+                alert('Reward Fee cannot exceed 9999.');
+                return false;
+            }
         }
 
         if (breed.length > 30 || petName.length > 30) {
@@ -181,43 +192,21 @@ const CreateListing = () => {
                             </View>
                         </View>
 
-                        <Text style={styles.emailLabel}>Adoption Fee</Text>
-                        <View style={{ flexDirection: 'row', }}>
-                            <View style={{ width: '16%', marginRight: '-5.7%' }}>
-                                <Input
-                                    value={'RM'}
-                                    inputStyle={styles.usernameInput}
-                                    editable={false}
-                                />
-                            </View>
-                            <View style={{ width: '90%' }}>
-                                <Input
-                                    required={true}
-                                    value={adoptionFee}
-                                    keyboardType="numeric"
-                                    onChangeText={text => {
-                                        const fee = text.replace(/[^0-9]/g, '');
-                                        setAdoptionFee(fee);
-
-                                        if (parseInt(fee) < 50 || parseInt(fee) > 400) {
-                                            setAdoptionFeeError('Adoption Fee needs to be between 50 and 400.');
-                                        } else {
-                                            setAdoptionFeeError(null);
-                                        }
-                                    }}
-                                    inputStyle={styles.usernameInput}
-                                />
-
-                            </View>
-                        </View>
-                        {adoptionFeeError && <Text style={styles.warningText}>{adoptionFeeError}</Text>}
                         <View style={styles.dropdownContainer}>
                             <Text style={styles.emailLabel}>Listing type</Text>
                             <View style={styles.pickerContainer}>
                                 <Picker
                                     selectedValue={listingType}
                                     itemStyle={styles.pickerItem}
-                                    onValueChange={(itemValue) => setListingType(itemValue)}
+                                    onValueChange={(itemValue) => {
+                                        setListingType(itemValue)
+                                        if (itemValue === 'missing') {
+                                            setAdoptionFee('0')
+                                            setIsLostFee(true)
+                                        }
+                                        else
+                                            setIsLostFee(false)
+                                    }}
                                 >
                                     <Picker.Item label="Select listing type..." value={null} />
                                     <Picker.Item label="Adopt" value="adopt" />
@@ -226,6 +215,77 @@ const CreateListing = () => {
                                 </Picker>
                             </View>
                         </View>
+
+                        {(listingType === 'adopt' || listingType === 'reHome') && <View>
+                            <Text style={styles.emailLabel}>Adoption Fee</Text>
+                            <View style={{ flexDirection: 'row' }}>
+                                <View style={{ width: '16%', marginRight: '-5.7%' }}>
+                                    <Input
+                                        value={'RM'}
+                                        inputStyle={styles.usernameInput}
+                                        editable={false}
+                                    />
+                                </View>
+                                <View style={{ width: '90%' }}>
+                                    <Input
+                                        required={true}
+                                        value={adoptionFee}
+                                        keyboardType="numeric"
+                                        onChangeText={text => {
+                                            const fee = text.replace(/[^0-9]/g, '');
+                                            setAdoptionFee(fee);
+
+                                            if (parseInt(fee) < 50 || parseInt(fee) > 400) {
+                                                setAdoptionFeeError('Adoption Fee needs to be between 50 and 400.');
+                                            } else {
+                                                setAdoptionFeeError(null);
+                                            }
+                                        }}
+                                        inputStyle={styles.usernameInput}
+                                    />
+
+                                </View>
+                            </View>
+                        </View>
+                        }
+
+
+                        {(listingType === 'missing') && <View>
+                            <Text style={styles.emailLabel}>Reward Fee</Text>
+                            <View style={{ flexDirection: 'row' }}>
+                                <View style={{ width: '16%', marginRight: '-5.7%' }}>
+                                    <Input
+                                        value={'RM'}
+                                        inputStyle={styles.usernameInput}
+                                        editable={false}
+                                    />
+                                </View>
+                                <View style={{ width: '90%' }}>
+                                    <Input
+                                        required={true}
+                                        value={adoptionFee}
+                                        keyboardType="numeric"
+                                        placeholder="For the one found your pet.."
+                                        onChangeText={text => {
+                                            const fee = text.replace(/[^0-9]/g, '');
+                                            setAdoptionFee(fee);
+
+                                            if (parseInt(fee) < 0) {
+                                                setAdoptionFeeError('Reward Fee cannot be negative.');
+                                            } else if (parseInt(fee) > 9999) {
+                                                setAdoptionFeeError('Reward Fee cannot more than 9999')
+                                            }
+                                            else {
+                                                setAdoptionFeeError(null);
+                                            }
+                                        }}
+                                        inputStyle={styles.usernameInput}
+                                    />
+
+                                </View>
+                            </View>
+                        </View>}
+                        {adoptionFeeError && <Text style={styles.warningText}>{adoptionFeeError}</Text>}
                         <View style={styles.dropdownContainer}>
                             <Text style={styles.emailLabel}>Description</Text>
                             <TextInput
@@ -304,7 +364,7 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         minHeight: 100, // Define the height that you want
         padding: windowHeight * 0.02
-      },
+    },
     backButtonText: {
         paddingTop: windowHeight * 0.004,
         fontSize: 24,

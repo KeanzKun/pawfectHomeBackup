@@ -16,6 +16,7 @@ const VetScreen = () => {
   const [data, setData] = useState([]);
   const [modalVisible, setModalVisible] = useState(false); // For modal visibility
   const [userLocation, setUserLocation] = useState(null);
+  const [isSearchModalUsed, setIsSearchModalUsed] = useState(false);
 
   useEffect(() => {
     fetchVets();
@@ -70,11 +71,14 @@ const VetScreen = () => {
 
   const handleSearch = (filters) => {
     if (filters.vetState) {
+      setIsSearchModalUsed(true);  // Set this to true when a filter is applied
       fetchVets(filters.vetState);
     } else {
+      setIsSearchModalUsed(false);  // Set this to false when no filter is applied
       fetchVets();
     }
   };
+
 
   const renderItem = ({ item }) => (
     <TouchableOpacity style={styles.item}
@@ -97,9 +101,17 @@ const VetScreen = () => {
     <View style={styles.container}>
       <Text style={styles.titleText}>Pawfect Home.</Text>
       <View style={styles.searchContainer}>
-        <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.searchButton}>
+        <TouchableOpacity
+          style={[
+            styles.searchButton,
+            isSearchModalUsed && { backgroundColor: Color.sandybrown }
+          ]}
+          onPress={() => setModalVisible(true)}
+        >
           <Text style={styles.searchText}>Search</Text>
         </TouchableOpacity>
+
+
       </View>
       <FlatList
         data={data}
@@ -110,7 +122,9 @@ const VetScreen = () => {
         modalVisible={modalVisible}
         setModalVisible={setModalVisible}
         onSearch={handleSearch}
+        onClose={() => setIsSearchModalUsed(false)}  // Add this line
       />
+
     </View>
   );
 };

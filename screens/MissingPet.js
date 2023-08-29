@@ -169,7 +169,7 @@ const MissingPetScreen = () => {
         refreshing={refreshing}  // And this line
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.2}
-        ListFooterComponent={loadingMore ? <ActivityIndicator size="large" color="#0000ff" /> : null}
+        ListFooterComponent={loadingMore ? <ActivityIndicator size="large" color={Color.sandybrown} /> : null}
       />
     </View>
   );

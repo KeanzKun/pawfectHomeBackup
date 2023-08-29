@@ -258,6 +258,11 @@ const MissingPetDetails = ({ route }) => {
                         <Text style={styles.date}>{formattedDate}</Text>
                     </View>
 
+                    <View style={styles.listingDateContainer}>
+                        <Text style={styles.title}>Reward Fee:</Text>
+                        <Text style={styles.date}>RM {petDetails.listing.adoption_fee}</Text>
+                    </View>
+
                     <View style={styles.contactContainer}>
                         <Text style={[styles.title, { fontSize: 28 }]}>Contact The Owner</Text>
                         <View style={styles.contactButtons}>

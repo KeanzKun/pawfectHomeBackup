@@ -46,16 +46,17 @@ const HomeScreen = () => {
   const [allItemsLoaded, setAllItemsLoaded] = useState(false);
   const [showMessageModalVisible, setShowMessageModalVisible] = useState(false);
   const [userDetails, setUserDetails] = useState(null);
-  
+  const [isSearchModalUsed, setIsSearchModalUsed] = useState(false);
+
   const ITEMS_PER_PAGE = 10;
   let timeoutId = null;
 
   const handleSearch = (searchFilters) => {
-    console.log('b4 set', filters)
+    setIsSearchModalUsed(true);  // Set this to true when search modal is used
     setFilters(searchFilters);
-    console.log('after set', filters)
     setSelectedType(null); // Reset the selected type
   };
+
 
   const handleScroll = (event) => {
     const offsetY = event.nativeEvent.contentOffset.y;
@@ -76,6 +77,7 @@ const HomeScreen = () => {
 
 
   const handleTypePress = (type) => {
+    setIsSearchModalUsed(false);  // Reset this when a category button is pressed
     if (selectedType === type) {
       setSelectedType(null); // If the type is already selected, deselect it
       setFilters({ ...filters, petType: null });
@@ -84,6 +86,7 @@ const HomeScreen = () => {
       setFilters({ ...filters, petType: type });
     }
   };
+
   const dataWithPhotos = data.filter(item => item.pet.pet_photo);
 
   //get user location
@@ -221,7 +224,7 @@ const HomeScreen = () => {
 
   const renderFooter = () => {
     if (!loadingMore) return null;
-    return <ActivityIndicator size="large" color="#0000ff" />;
+    return <ActivityIndicator size="large" color={Color.sandybrown} />;
   };
 
 
@@ -287,12 +290,16 @@ const HomeScreen = () => {
 
         <Text style={styles.titleText}>Pawfect Home.</Text>
 
-        <View style={styles.searchContainer}>
-          <TouchableOpacity style={styles.searchButton}
-            onPress={() => setModalVisible(true)}>
-            <Text style={styles.searchText}>Search</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          style={[
+            styles.searchButton,
+            isSearchModalUsed && Object.values(filters).some(value => value !== null) && { backgroundColor: Color.sandybrown }
+          ]}
+          onPress={() => setModalVisible(true)}
+        >
+          <Text style={styles.searchText}>Search</Text>
+        </TouchableOpacity>
+
 
         <View style={styles.categoriesContainer}>
           <Text style={styles.categories}>Categories</Text>
