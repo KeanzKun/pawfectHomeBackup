@@ -306,7 +306,7 @@ const CreateListing = () => {
                                     navigation.navigate("CreateListingLocation", {
                                         animalType: animalType,
                                         breed: breed,
-                                        date: date,
+                                        date: date.toISOString(),
                                         petName: petName,
                                         adoptionFee: adoptionFee,
                                         listingType: listingType,

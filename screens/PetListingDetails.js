@@ -37,7 +37,7 @@ const PetListingDetails = ({ route }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [buttonText, setButtonText] = useState(null);
     const [isLoadingVisible, setIsLoadingVisible] = useState(false);
-
+    const [isModalVisible, setIsModalVisible] = useState(false);
     useEffect(() => {
         if (petDetails) {
             if (petDetails.listing.listing_type === "missing") {
@@ -185,7 +185,42 @@ const PetListingDetails = ({ route }) => {
         return (
 
             <View style={{ flex: 1 }}>
+                <Modal
+                    animationType="fade"
+                    transparent={true}
+                    visible={isModalVisible}
+                >
+                    <View style={styles.modalContainer}>
+                        <View style={styles.modalView}>
+                            <Text style={styles.modalText}>Confirmation</Text>
+                            <Text style={{ textAlign: 'center', marginTop: '5%' }}>Please note that the action cannot be undone.</Text>
 
+                            <View style={styles.modalButtonContainer}>
+                                <TouchableOpacity
+                                    onPress={() => setIsModalVisible(false)}
+                                    style={styles.modalButton}
+                                >
+                                    <Text style={styles.modalButtonText}>Back</Text>
+
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        setIsModalVisible(false); // Hide the modal
+                                        if (buttonText.toLowerCase() === "found" || buttonText.toLowerCase() === "adopted") {
+                                            updateListingStatus(buttonText.toLowerCase());
+                                        } else {
+                                            updateListingStatus('delisted');
+                                        }
+                                        navigation.navigate('PetListingHistoryScreen');
+                                    }}
+                                    style={styles.modalButton}
+                                >
+                                    <Text style={styles.modalButtonText}>Proceed</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+                </Modal>
                 <TouchableOpacity
                     style={styles.backButton}
                     onPress={() => navigation.goBack()} // Navigate back to the previous screen
@@ -270,23 +305,21 @@ const PetListingDetails = ({ route }) => {
                             style={styles.loginButton}
                             underlayColor={Color.sandybrown}
                             onPress={() => {
-                                updateListingStatus(buttonText.toLowerCase());
-                                navigation.navigate('PetListingHistoryScreen',);
+                                setIsModalVisible(true); // Show the modal
                             }}
                         >
                             <Text style={styles.loginButtonText}>{buttonText}</Text>
                         </TouchableOpacity>
-
                         <TouchableOpacity
                             style={styles.loginButton}
                             underlayColor={Color.sandybrown}
                             onPress={() => {
-                                updateListingStatus('delisted')
-                                navigation.navigate('PetListingHistoryScreen');
+                                setIsModalVisible(true); // Show the modal
                             }}
                         >
                             <Text style={styles.loginButtonText}>Delist</Text>
                         </TouchableOpacity>
+
                     </View>
 
 
@@ -300,6 +333,51 @@ const PetListingDetails = ({ route }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+    },
+    modalButtonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        width: '100%',
+        height: '100%',
+
+    },
+    modalText: {
+        fontSize: windowHeight * 0.03,
+        letterSpacing: 0.4,
+        color: Color.dimgray,
+        fontWeight: '900',
+        textAlign: 'center',
+    },
+    modalButtonText: {
+        fontSize: windowHeight * 0.02,
+        letterSpacing: 0.3,
+        color: Color.white,
+        fontFamily: FontFamily.interExtrabold,
+        fontWeight: "800",
+    },
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0,0,0,0.5)'
+    },
+    modalView: {
+        width: '75%',
+        height: '25%',
+        backgroundColor: 'white',
+        padding: '5%',
+        borderRadius: 30
+    },
+    modalButton: {
+        borderRadius: 87,
+        backgroundColor: Color.sandybrown,
+        marginHorizontal: '5%',
+        marginBottom: '20%',
+        width: '40%',
+        height: '30%',
+        alignItems: "center",
+        justifyContent: "center",
+        alignSelf: "center",
     },
     buttonFrame: {
         flex: 1,

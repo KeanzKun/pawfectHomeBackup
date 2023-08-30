@@ -78,12 +78,13 @@ const HomeScreen = () => {
 
   const handleTypePress = (type) => {
     setIsSearchModalUsed(false);  // Reset this when a category button is pressed
+
     if (selectedType === type) {
       setSelectedType(null); // If the type is already selected, deselect it
-      setFilters({ ...filters, petType: null });
+      setFilters({ petType: null });
     } else {
       setSelectedType(type); // Select the new type
-      setFilters({ ...filters, petType: type });
+      setFilters({ petType: type });  // Reset all other filters and only set the petType
     }
   };
 
@@ -497,7 +498,7 @@ const styles = StyleSheet.create({
   },
   searchButton: {
     backgroundColor: 'white',
-    width: '100%',
+    width: '90%',
     height: windowHeight * 0.06,
     justifyContent: 'center',
     alignItems: 'center',

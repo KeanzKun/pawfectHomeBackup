@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import { BackHandler, Alert, Text, StyleSheet, Pressable, View, ScrollView, TouchableHighlight, Dimensions } from "react-native";
+import {Image, BackHandler, Alert, Text, StyleSheet, Pressable, View, ScrollView, TouchableHighlight, Dimensions } from "react-native";
 import { Button, Input } from "@rneui/themed";
 import { useNavigation, useFocusEffect, CommonActions } from "@react-navigation/native";
 import { Color, FontFamily } from "../GlobalStyles";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SERVER_ADDRESS } from '../config';
-
+import LinearLoadingIndicator from "../components/LinearLoadingIndicator";
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
 const ChangePassword2 = () => {
@@ -16,14 +16,14 @@ const ChangePassword2 = () => {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [passwordValid, setPasswordValid] = useState(true);
     const [isPasswordMatch, setIsPasswordMatch] = useState(true);
-
+    const [isLoading, setIsLoading] = useState(false)
 
     const handleNewPasswordChange = (text) => {
         setNewPassword(text);
         setPasswordValid(isPasswordValid(text));  // Use the isPasswordValid function here
         setIsPasswordMatch(text === confirmPassword);
     };
-    
+
 
     const handleConfirmPasswordChange = (text) => {
         setConfirmPassword(text);
@@ -31,7 +31,7 @@ const ChangePassword2 = () => {
     };
 
     const isPasswordValid = (password) => {
-        const regex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#.,<>[\]])[A-Za-z\d@$!%*?&#.,<>[\]]{8,}$/;
+        const regex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#_.,<>[\]])[A-Za-z\d@$!%*?&#_.,<>[\]]{8,}$/;
         return regex.test(password);
     };
 
@@ -64,15 +64,17 @@ const ChangePassword2 = () => {
 
     // Function to handle the password update
     const handleUpdatePassword = async () => {
-
+        setIsLoading(true)
         //Validate the passwords
         if (newPassword === '' || confirmPassword === '') {
             Alert.alert('Error', 'Both password fields must be filled in.');
+            setIsLoading(false)
             return;
         }
 
         if (!passwordValid || !isPasswordMatch) {
             Alert.alert('Error', 'Please meet all the criteria.');
+            setIsLoading(false)
         }
 
         const token = await AsyncStorage.getItem('token'); // Retrieve token
@@ -91,19 +93,33 @@ const ChangePassword2 = () => {
 
             if (response.status === 200) {
                 await AsyncStorage.removeItem('token');
+                setIsLoading(false)
                 // Password was updated, navigate to the next screen or show success message
                 navigation.navigate("PasswordChanged");
             } else {
+                setIsLoading(false)
                 // Handle error, show an alert or some feedback to the user
                 Alert.alert('Error', result.message);
             }
         } catch (error) {
+            setIsLoading(false)
             console.error(error);
             // Handle the error as needed
         }
     };
     return (
+        
         <ScrollView scrollEnabled={false}>
+             {isLoading && (
+                <View style={styles.loadingOverlay}>
+                    <Image source={require('../assets/icon/cat-typing.gif')} style={{ width: '28%', height: '8%', marginBottom: '3%' }} />
+                    <Text style={{ color: Color.sandybrown, fontSize: 20 }}>Please wait while our furry staff</Text>
+                    <Text style={{ color: Color.sandybrown, fontSize: 20, marginBottom: '5%' }}>working on it...</Text>
+                    <View style={{ width: '50%', overflow: 'hidden' }}>
+                        <LinearLoadingIndicator></LinearLoadingIndicator>
+                    </View>
+                </View>
+            )}
             <View style={[styles.container, { height: windowHeight }]}>
 
                 <View style={{ flex: 5 }}>
@@ -238,6 +254,17 @@ const styles = StyleSheet.create({
         marginTop: windowHeight * -0.03,
         marginBottom: windowHeight * 0.0055
     },
+    loadingOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.8)', // Semi-transparent white background
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 1000, // Ensure it's on top
+    }
 });
 
 export default ChangePassword2;

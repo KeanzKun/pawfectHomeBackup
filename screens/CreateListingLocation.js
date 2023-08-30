@@ -15,14 +15,17 @@ const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
 const DEFAULT_LAT = 3.1466
 const DEFAULT_LNG = 101.6958
-
+const DEFAULT_CITY = 'Kuala Lumpur'
+const DEFAULT_STATE = 'Wilayah Persekutuan Kuala Lumpur'
 const CreateListingLocation = ({ route, navigation }) => {
-    const { animalType, breed, date, petName, adoptionFee, listingType, petGender, description } = route.params;
+    const { animalType, breed, petName, adoptionFee, listingType, petGender, description } = route.params;
+    const date = new Date(route.params.date);
+
     const [location, setLocation] = useState({
         latitude: DEFAULT_LAT,
         longitude: DEFAULT_LNG,
-        city: null,
-        state: null
+        city: DEFAULT_CITY,
+        state: DEFAULT_STATE
     });
 
 
@@ -187,7 +190,7 @@ const CreateListingLocation = ({ route, navigation }) => {
                         navigation.navigate("CreateListing2", {
                             animalType: animalType,
                             breed: breed,
-                            date: date,
+                            date: date.toISOString(),
                             petName: petName,
                             adoptionFee: adoptionFee,
                             listingType: listingType,

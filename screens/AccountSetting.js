@@ -27,7 +27,9 @@ const AccountSetting = () => {
             >
                 <View style={styles.modalContainer}>
                     <View style={styles.modalView}>
-                        <Text style={styles.modalText}>Are you sure you want to Log out?</Text>
+                        <Text style={styles.modalText}>Confirmation</Text>
+                        <Text style={{ textAlign: 'center', marginTop: '5%' }}>Are you sure you want to logout?</Text>
+
 
                         <View style={styles.modalButtonContainer}>
                             <TouchableOpacity
@@ -164,7 +166,7 @@ const styles = StyleSheet.create({
         borderRadius: 87,
         backgroundColor: Color.sandybrown,
         marginHorizontal: '5%',
-        marginBottom: '3%',
+        marginBottom: '8%',
         width: '40%',
         height: '30%',
         alignItems: "center",

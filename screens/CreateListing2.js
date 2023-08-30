@@ -18,7 +18,8 @@ const windowWidth = Dimensions.get("window").width;
 
 
 const CreateListing2 = ({ route }) => {
-    const { animalType, breed, date, petName, adoptionFee, listingType, location, petGender, description } = route.params;
+    const { animalType, breed, petName, adoptionFee, listingType, location, petGender, description } = route.params;
+    const date = new Date(route.params.date);
     const [userImages, setUserImages] = useState([]);
     const [imageNames, setImageNames] = useState([]);
     const [modalVisible, setModalVisible] = useState(false);
@@ -101,20 +102,43 @@ const CreateListing2 = ({ route }) => {
         launchCamera(options, async (response) => {
             console.log('LAUNCH CAMERA');
 
-            // Handle the response here
             if (response.didCancel) {
                 console.log('User cancelled camera picker');
             } else if (response.error) {
                 console.log('ImagePicker Error: ', response.error);
             } else if (response.assets && response.assets[0] && response.assets[0].uri) {
-                const source = { uri: response.assets[0].uri };
-                console.log('ELSE IF LAST');
+                const asset = response.assets[0];
+                const originalWidth = asset.width;
+                const originalHeight = asset.height;
 
-                setUserImages(prevImages => [...prevImages, source]);
+                // Define the percentage to resize
+                const resizePercentage = 0.6;  // 60%
+
+                // Calculate new dimensions
+                const newWidth = originalWidth * resizePercentage;
+                const newHeight = originalHeight * resizePercentage;
+
+                try {
+                    // Resize and compress the image
+                    const resizedImage = await ImageResizer.createResizedImage(
+                        asset.uri,
+                        newWidth,
+                        newHeight,
+                        'JPEG',  // format
+                        90  // compression quality
+                    );
+
+                    const source = { uri: resizedImage.uri };
+
+                    setUserImages(prevImages => [...prevImages, source]);
+                } catch (error) {
+                    console.log("Error resizing the image: ", error);
+                }
             }
             console.log('EXIT IF');
         });
     };
+
 
     const chooseImage = () => {
         if (userImages.length >= 5) {

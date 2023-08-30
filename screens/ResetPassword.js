@@ -14,7 +14,7 @@ const ResetPassword = ({ route }) => {
     const [isPasswordMatch, setIsPasswordMatch] = useState(true);
 
     const isPasswordValid = (password) => {
-        const regex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#.,<>[\]])[A-Za-z\d@$!%*?&#.,<>[\]]{8,}$/;
+        const regex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#_.,<>[\]])[A-Za-z\d@$!%*?&#_.,<>[\]]{8,}$/;
         return regex.test(password);
     };
 
