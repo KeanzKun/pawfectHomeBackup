@@ -89,7 +89,17 @@ const AccountSetting = () => {
                         onPress={() => navigation.navigate("Top")}
                         underlayColor={Color.transparent}
                     >
-                        <Text style={{ fontSize: 15, fontWeight: '500' }}>Pet listing</Text>
+                        <Text style={{ fontSize: 15, fontWeight: '500' }}>My Pet listing</Text>
+                    </TouchableOpacity>
+                </View>
+                
+                <View style={styles.buttonContainer}>
+                    <TouchableOpacity
+                        style={styles.button}
+                        onPress={() => navigation.navigate("CreateListing")}
+                        underlayColor={Color.transparent}
+                    >
+                        <Text style={{ fontSize: 15, fontWeight: '500' }}>Create Pet listing</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -192,7 +202,7 @@ const styles = StyleSheet.create({
         textAlign: "left",
     },
     buttonFrame: {
-        flex: 1.8,
+        flex: 3,
         alignItems: "flex-start",
         justifyContent: "space-between",  // Add this line
     },

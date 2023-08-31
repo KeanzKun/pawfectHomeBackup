@@ -39,6 +39,7 @@ const EditProfile = () => {
             return;
         }
 
+        
         const token = await AsyncStorage.getItem('token');
         fetch(`${SERVER_ADDRESS}/api/update-userName`, {
             method: 'POST',

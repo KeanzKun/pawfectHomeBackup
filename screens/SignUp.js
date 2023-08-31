@@ -57,6 +57,7 @@ const SignUp = () => {
         }, [])
     );
 
+
     const validateEmail = async (email) => {
         setUserEmail(email)
         setEmailValid(true)
@@ -79,12 +80,6 @@ const SignUp = () => {
 
     const isCriteriaMet = () => {
 
-        console.log('userName:', userName);
-        console.log('userEmail:', userEmail);
-        console.log('password:', password);
-        console.log('confirmPassword:', confirmPassword);
-        console.log('contactNumber:', contactNumber);
-
         // Check if any fields are empty
         if (userName.trim() === '' ||
             userEmail.trim() === '' ||
@@ -103,9 +98,28 @@ const SignUp = () => {
             return false;
         }
 
+        if (isDisposableMail(userEmail)) {
+            setIsDisposableDomain(true);
+            setModalMessage("Disposable email not allowed.");
+            setModalVisible(true);
+            return;
+        }
+
         return true; // Return true if all fields are filled and validation criteria are met
     };
 
+    const isDisposableMail = async (email) => {
+        const domain = email.split('@')[1]; // Extract the domain from the email
+        try {
+            console.log('API CALLED')
+            const response = await fetch(`https://api.mailcheck.ai/domain/${domain}`);
+            const data = await response.json();
+            return data.disposable; // This will return true if the domain is disposable, false otherwise
+        } catch (error) {
+            console.error("Error checking if email is disposable:", error);
+            return false; // Default to not disposable if there's an error
+        }
+    };
 
     const validateContactNumber = async (text) => {
         if (text.startsWith("+60")) {
@@ -204,7 +218,7 @@ const SignUp = () => {
         const regex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#_.,<>[\]])[A-Za-z\d@$!%*?&#_.,<>[\]]{8,}$/;
         return regex.test(password);
     };
-    
+
 
     //Called by handleSignUp, send verification code to user
     const handleRequestCode = () => {
@@ -229,6 +243,7 @@ const SignUp = () => {
 
     //called when user click signup button
     const handleSignUp = async () => {
+
         if (!isCriteriaMet()) {
             return;
         }
@@ -271,7 +286,16 @@ const SignUp = () => {
             resetScrollToCoords={{ x: 0, y: 0 }}
             scrollEnabled={true}
         >
-            {isLoading && <LinearLoadingIndicator />}
+            {isLoading && (
+                <View style={styles.loadingOverlay}>
+                    <Image source={require('../assets/icon/cat-typing.gif')} style={{ width: '28%', height: '8%', marginBottom: '3%' }} />
+                    <Text style={{ color: Color.sandybrown, fontSize: 20 }}>Please wait while our furry staff</Text>
+                    <Text style={{ color: Color.sandybrown, fontSize: 20, marginBottom: '5%' }}>working on it...</Text>
+                    <View style={{ width: '50%', overflow: 'hidden' }}>
+                        <LinearLoadingIndicator></LinearLoadingIndicator>
+                    </View>
+                </View>
+            )}
             <Modal
                 animationType="fade"
                 transparent={true}
@@ -279,7 +303,8 @@ const SignUp = () => {
             >
                 <View style={styles.modalContainer}>
                     <View style={styles.modalView}>
-                        <Text style={styles.modalText}>{modalMessage}</Text>
+                        <Text style={styles.modalText}>Error!</Text>
+                        <Text style={{ textAlign: 'center', marginTop: '5%' }}>{modalMessage}</Text>
                         <TouchableOpacity
                             onPress={() => setModalVisible(false)}
                             style={styles.modalButton}
@@ -452,6 +477,17 @@ const styles = StyleSheet.create({
         color: Color.dimgray,
         fontWeight: '900',
         textAlign: "left",
+    },
+    loadingOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.8)', // Semi-transparent white background
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 1000, // Ensure it's on top
     },
     loginToContinueText: {
         fontSize: 18,

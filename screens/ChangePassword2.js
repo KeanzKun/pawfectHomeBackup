@@ -125,7 +125,7 @@ const ChangePassword2 = () => {
                 <View style={{ flex: 5 }}>
                     <TouchableHighlight
                         style={styles.backButton}
-                        onPress={() => navigation.navigate("AccountSetting")} // Navigate back to the previous screen
+                        onPress={() => handleBackPress()} // Navigate back to the previous screen
                     >
                         <Text style={styles.backButtonText}>X</Text>
                     </TouchableHighlight>
