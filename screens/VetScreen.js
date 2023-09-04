@@ -17,6 +17,7 @@ const VetScreen = () => {
   const [modalVisible, setModalVisible] = useState(false); // For modal visibility
   const [userLocation, setUserLocation] = useState(null);
   const [isSearchModalUsed, setIsSearchModalUsed] = useState(false);
+  const [itemHeight, setItemHeight] = useState(windowHeight * 0.19);
 
   useEffect(() => {
     fetchVets();
@@ -42,6 +43,13 @@ const VetScreen = () => {
     }
   };
 
+  const handleLayout = (event) => {
+    const height = event.nativeEvent.layout.height;
+    if (height > windowHeight * 0.21) {
+      setItemHeight(height);
+    }
+  };
+  
   useEffect(() => {
     getUserLocation();
   }, []);
@@ -83,13 +91,13 @@ const VetScreen = () => {
   const renderItem = ({ item }) => (
     <TouchableOpacity style={styles.item}
       onPress={() => navigation.navigate("VetDetails", { vetID: item.vetID })}>
-      <View style={styles.itemTextContainer}>
+      <View style={[styles.itemTextContainer, { height: itemHeight, marginBottom: '9%' }]} onLayout={handleLayout}>
         <Text style={styles.itemText}>{item.vet_name}</Text>
         <View style={{ flexDirection: 'row', marginBottom: '2%' }}>
           <MaterialCommunityIcons name="store-clock-outline" color={Color.sandybrown} size={20} />
           <Text style={styles.itemSubText}>{item.vet_hours}</Text>
         </View>
-        <View style={{ flexDirection: 'row', marginBottom: '2%' }}>
+        <View style={{ flexDirection: 'row' }}>
           <MaterialCommunityIcons name="map-marker-outline" color={Color.sandybrown} size={20} />
           <Text style={styles.itemSubText}>{item.vet_address}</Text>
         </View>
@@ -198,7 +206,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   item: {
-    height: windowHeight * 0.21,
+    flex:1,
     shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowRadius: 5,
@@ -242,6 +250,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingLeft: windowHeight * 0.035,
     paddingTop: windowHeight * 0.024,
+    paddingRight: '10%',
     justifyContent: 'flex-start',
     alignItems: 'flex-start',
   },

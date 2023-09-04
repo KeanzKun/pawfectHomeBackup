@@ -139,10 +139,16 @@ const VetDetails = ({ route }) => {
                             <Text style={styles.petName}>
                                 {vetDetails.vet_name}
                             </Text>
-                            <Text style={styles.detailText}>{vetDetails.vet_hours}</Text>
-                            <Text style={styles.detailText}>{vetDetails.vet_address}</Text>
+                            <View style={{ flexDirection: 'row' }}>
+                                <MaterialCommunityIcons name="clock-time-eight-outline" color={Color.sandybrown} size={20} />
+                                <Text style={styles.detailText}>{vetDetails.vet_hours}</Text>
+                            </View>
+                            <View style={{ flexDirection: 'row', marginTop: '3%' }}>
+                                <MaterialCommunityIcons name="map-marker-outline" color={Color.sandybrown} size={20} />
+                                <Text style={styles.detailText}>{vetDetails.vet_address}</Text>
+                            </View>
                             <TouchableOpacity onPress={searchVetOnGoogle}>
-                                <Text style={[styles.detailText, { color: Color.sandybrown }]}>Search on Google</Text>
+                                <Text style={[styles.detailText, { marginTop: '3%',marginLeft: '10%', color: Color.sandybrown }]}>Search on Google</Text>
                             </TouchableOpacity>
                         </View>
 
@@ -232,7 +238,8 @@ const styles = StyleSheet.create({
         marginVertical: windowHeight * 0.05,
     },
     detailsContainer: {
-        height: windowHeight * 0.23,
+        flex: 1,
+        height: '100%',
         marginHorizontal: windowHeight * 0.03,
         paddingVertical: windowHeight * 0.03,
         backgroundColor: 'white',
@@ -251,6 +258,7 @@ const styles = StyleSheet.create({
         fontWeight: '900',
     },
     detailText: {
+        marginLeft: '3%',
         fontSize: 15,
     },
     contactContainer: {

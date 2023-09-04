@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Text, Modal, StyleSheet, TouchableOpacity, Pressable, View, ScrollView, TouchableHighlight, Dimensions, KeyboardAvoidingView, Platform } from "react-native";
+import { Image, Text, Modal, StyleSheet, TouchableOpacity, Pressable, View, ScrollView, TouchableHighlight, Dimensions, KeyboardAvoidingView, Platform } from "react-native";
 import { Button, Input } from "@rneui/themed";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { Color, FontFamily } from "../GlobalStyles";
@@ -78,7 +78,7 @@ const SignUp = () => {
         }
     };
 
-    const isCriteriaMet = () => {
+    const isCriteriaMet = async () => {
 
         // Check if any fields are empty
         if (userName.trim() === '' ||
@@ -98,7 +98,12 @@ const SignUp = () => {
             return false;
         }
 
-        if (isDisposableMail(userEmail)) {
+        const disposable = await isDisposableMail(userEmail);
+        console.log('DISPOSABLE RETURN VALUE:', disposable);
+
+        if (disposable) {
+            console.log('DISPOSABLE RETURN VALUE: ' + isDisposableMail(userEmail))
+            console.log('ISDISPOSABLEMAIL FUNCTION RAN');
             setIsDisposableDomain(true);
             setModalMessage("Disposable email not allowed.");
             setModalVisible(true);
@@ -114,6 +119,10 @@ const SignUp = () => {
             console.log('API CALLED')
             const response = await fetch(`https://api.mailcheck.ai/domain/${domain}`);
             const data = await response.json();
+
+            console.log('Parsed Data:', data);
+
+            console.log('DATA: ' + data.disposable);
             return data.disposable; // This will return true if the domain is disposable, false otherwise
         } catch (error) {
             console.error("Error checking if email is disposable:", error);

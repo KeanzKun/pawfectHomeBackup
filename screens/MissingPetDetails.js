@@ -6,6 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 import { SERVER_ADDRESS } from '../config';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Swiper from 'react-native-swiper';
+import EnlargeImageModal from '../components/EnlargeImageModal';
 
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
@@ -35,6 +36,8 @@ const MissingPetDetails = ({ route }) => {
     const [isFullDescriptionShown, setIsFullDescriptionShown] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [userContact, setUserContact] = useState(null);
+    const [activeIndex, setActiveIndex] = useState(0);
+    const [imageModalVisible, setImageModalVisible] = useState(false);
     const { locationDetails } = route.params
 
     useEffect(() => {
@@ -206,32 +209,36 @@ const MissingPetDetails = ({ route }) => {
                         }}
                     >
                         {imageUrls.map((imageUrl, index) => (
-                            <Image
-                                key={index}
-                                source={{ uri: imageUrl }}
-                                style={styles.image}
-                            />
+                            <TouchableOpacity key={index} activeOpacity={0.8} onPress={() => {
+                                setActiveIndex(index);
+                                setImageModalVisible(true);
+                            }}>
+                                <Image
+                                    source={{ uri: imageUrl }}
+                                    style={styles.image}
+                                />
+                            </TouchableOpacity>
                         ))}
                     </Swiper>
 
                     <View key={1} style={styles.detailsContainer}>
                         <Text style={styles.petName}>
-                            {petDetails.pet.pet_name} <MaterialCommunityIcons name={gender} color='#900' size={25} />
+                            {petDetails.pet.pet_name} <MaterialCommunityIcons name={gender} color={Color.sandybrown} size={25} />
                         </Text>
                         <View style={{ flexDirection: 'row', marginBottom: '2%' }}>
-                            <MaterialCommunityIcons name="paw" color='#900' size={20} />
+                            <MaterialCommunityIcons name="paw" color={Color.sandybrown} size={20} />
                             <Text style={styles.detailText}>{petType}, {petDetails.pet.pet_breed}</Text>
                         </View>
                         <View style={{ flexDirection: 'row', marginBottom: '2%' }}>
-                            <MaterialCommunityIcons name="calendar-blank-outline" color='#900' size={20} />
+                            <MaterialCommunityIcons name="calendar-blank-outline" color={Color.sandybrown} size={20} />
                             <Text style={styles.detailText}>{petAge}</Text>
                         </View>
                         <View style={{ flexDirection: 'row', marginBottom: '2%' }}>
-                            <MaterialCommunityIcons name="map-marker" color='#900' size={20} />
+                            <MaterialCommunityIcons name="map-marker" color={Color.sandybrown} size={20} />
                             <Text style={styles.detailText}>{locationCity}, {locationState}</Text>
                         </View>
                         <View style={{ flexDirection: 'row', marginBottom: '2%' }}>
-                            <MaterialCommunityIcons name="account" color='#900' size={20} />
+                            <MaterialCommunityIcons name="account" color={Color.sandybrown} size={20} />
                             <Text style={styles.detailText}>{petDetails.user.user_name}</Text>
                         </View>
                     </View>
@@ -297,6 +304,7 @@ const MissingPetDetails = ({ route }) => {
                     </View>
 
                 </ScrollView>
+                <EnlargeImageModal modalVisible={imageModalVisible} setModalVisible={setImageModalVisible} imageUrl={imageUrls[activeIndex]} />
             </View>
         );
     }
@@ -371,7 +379,8 @@ const styles = StyleSheet.create({
         borderBottomRightRadius: 50,
     },
     detailsContainer: {
-        height: windowHeight * 0.23,
+        flex: 1,
+        height: '100%',
         marginHorizontal: windowHeight * 0.03,
         paddingVertical: windowHeight * 0.02,
         backgroundColor: 'white',

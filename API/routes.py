@@ -770,4 +770,4 @@ def add_listing():
 # if __name__ == '__main__':
 #     app.run(host='0.0.0.0', debug=True)
 if __name__ == '__main__':
-    app.run(host='10.243.102.84', debug=True)
+    app.run(host='10.243.102.84')

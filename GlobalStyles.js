@@ -16,7 +16,7 @@ export const FontFamily = {
     sandybrown: "#ff9e5c",
     white: "#fff",
   };
-  /* border radiuses */
+  /* border radiuses */ 
   export const Border = {
     br_33xl_7: 53,
   };
