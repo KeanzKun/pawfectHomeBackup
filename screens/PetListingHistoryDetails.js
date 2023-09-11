@@ -177,18 +177,18 @@ const PetListingHistoryDetails = ({ route }) => {
 
                     <View key={1} style={styles.detailsContainer}>
                         <Text style={styles.petName}>
-                            {petDetails.pet.pet_name} <MaterialCommunityIcons name={gender} color='#900' size={25} />
+                            {petDetails.pet.pet_name} <MaterialCommunityIcons name={gender} color={Color.sandybrown} size={25} />
                         </Text>
                         <View style={{ flexDirection: 'row', marginBottom: '2%' }}>
-                            <MaterialCommunityIcons name="paw" color='#900' size={20} />
+                            <MaterialCommunityIcons name="paw" color={Color.sandybrown} size={20} />
                             <Text style={styles.detailText}>{petType}, {petDetails.pet.pet_breed}</Text>
                         </View>
                         <View style={{ flexDirection: 'row', marginBottom: '2%' }}>
-                            <MaterialCommunityIcons name="calendar-blank-outline" color='#900' size={20} />
+                            <MaterialCommunityIcons name="calendar-blank-outline" color={Color.sandybrown} size={20} />
                             <Text style={styles.detailText}>{petAge}</Text>
                         </View>
                         <View style={{ flexDirection: 'row', marginBottom: '2%' }}>
-                            <MaterialCommunityIcons name="map-marker" color='#900' size={20} />
+                            <MaterialCommunityIcons name="map-marker" color={Color.sandybrown} size={20} />
                             <Text style={styles.detailText}>{locationCity}, {locationState}</Text>
                         </View>
                     </View>
@@ -291,7 +291,8 @@ const styles = StyleSheet.create({
         borderBottomRightRadius: 50,
     },
     detailsContainer: {
-        height: windowHeight * 0.21,
+        flex: 1,
+        height: '100%',
         marginHorizontal: windowHeight * 0.03,
         paddingVertical: windowHeight * 0.02,
         backgroundColor: 'white',
