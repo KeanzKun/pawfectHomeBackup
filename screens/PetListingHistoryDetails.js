@@ -201,7 +201,7 @@ const PetListingHistoryDetails = ({ route }) => {
                         <Text>
                             {description}
                         </Text>
-                        {description.length > 300 && (
+                        {description.length > 100 && (
                             <TouchableOpacity onPress={toggleDescription}>
                                 <Text style={styles.showMore}>
                                     {isFullDescriptionShown ? "Show Less" : "Show More"}

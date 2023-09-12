@@ -533,7 +533,7 @@ def get_years_from_date(date_of_birth):
 
 @app.route('/api/listings/active', methods=['GET'])
 def get_active_listings():
-    user_id = request.args.get('userID')  # Changed 'user_id' to 'userID'
+    user_id = request.args.get('userID')  
     if not user_id:
         return jsonify({'error': 'User ID not provided'}), 400  # Return an error if no user_id
 
@@ -613,7 +613,7 @@ def get_missing_listings():
     longitude = request.args.get('longitude', default=0, type=float)
 
     # Fetch all listings with type 'missing'
-    all_listings = Listing.query.filter_by(listing_type='missing').all()
+    all_listings = Listing.query.filter_by(listing_type='missing', listing_status= 'active').all()
     result = []
 
     for listing in all_listings:
@@ -760,7 +760,7 @@ def add_listing():
 
 
 
-# if __name__ == '__main__':
-#     app.run(host='0.0.0.0', debug=True)
 if __name__ == '__main__':
-    app.run(host='10.243.102.84')
+    app.run(host='0.0.0.0', debug=True)
+# if __name__ == '__main__':
+#     app.run(host='10.243.102.84')

@@ -36,6 +36,7 @@ const PetListingDetails = ({ route }) => {
     const [isFullDescriptionShown, setIsFullDescriptionShown] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [buttonText, setButtonText] = useState(null);
+    const [updateListingText, setUpdateListingText] = useState('');
     const [isLoadingVisible, setIsLoadingVisible] = useState(false);
     const [isModalVisible, setIsModalVisible] = useState(false);
     useEffect(() => {
@@ -205,12 +206,14 @@ const PetListingDetails = ({ route }) => {
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                     onPress={() => {
+                                        console.log("UPDATE LISTING TEXT: " + updateListingText)
                                         setIsModalVisible(false); // Hide the modal
-                                        if (buttonText.toLowerCase() === "found" || buttonText.toLowerCase() === "adopted") {
-                                            updateListingStatus(buttonText.toLowerCase());
+                                        if (updateListingText.toLowerCase() === "found" || updateListingText.toLowerCase() === "adopted") {
+                                            updateListingStatus(updateListingText.toLowerCase());
                                         } else {
-                                            updateListingStatus('delisted');
+                                            updateListingStatus(updateListingText);
                                         }
+
                                         navigation.navigate('PetListingHistoryScreen');
                                     }}
                                     style={styles.modalButton}
@@ -287,7 +290,7 @@ const PetListingDetails = ({ route }) => {
                         <Text>
                             {description}
                         </Text>
-                        {description.length > 300 && (
+                        {description.length > 100 && (
                             <TouchableOpacity onPress={toggleDescription}>
                                 <Text style={styles.showMore}>
                                     {isFullDescriptionShown ? "Show Less" : "Show More"}
@@ -305,6 +308,7 @@ const PetListingDetails = ({ route }) => {
                             style={styles.loginButton}
                             underlayColor={Color.sandybrown}
                             onPress={() => {
+                                setUpdateListingText({ buttonText })
                                 setIsModalVisible(true); // Show the modal
                             }}
                         >
@@ -314,6 +318,7 @@ const PetListingDetails = ({ route }) => {
                             style={styles.loginButton}
                             underlayColor={Color.sandybrown}
                             onPress={() => {
+                                setUpdateListingText('delisted');
                                 setIsModalVisible(true); // Show the modal
                             }}
                         >

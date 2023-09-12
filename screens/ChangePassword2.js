@@ -75,6 +75,7 @@ const ChangePassword2 = () => {
         if (!passwordValid || !isPasswordMatch) {
             Alert.alert('Error', 'Please meet all the criteria.');
             setIsLoading(false)
+            return;
         }
 
         const token = await AsyncStorage.getItem('token'); // Retrieve token

@@ -79,7 +79,7 @@ const SignUp = () => {
     };
 
     const isCriteriaMet = async () => {
-
+        setIsLoading(true);
         // Check if any fields are empty
         if (userName.trim() === '' ||
             userEmail.trim() === '' ||
@@ -88,13 +88,15 @@ const SignUp = () => {
             contactNumber.trim() === '') {
             setModalMessage("Please fill in all fields");
             setModalVisible(true);
+            setIsLoading(false);
             return false;
-        }
+        } 
 
         // If fields are filled, check validation criteria
         if (!isEmailValid || !passwordValid || (isEmailExist) || isContactNumbeExist || !isUsernameValid || !isPasswordMatch || !isContactNumberValid || isDisposableDomain) {
             setModalMessage("Please meet all the input criteria");
             setModalVisible(true);
+            setIsLoading(false);
             return false;
         }
 
@@ -107,9 +109,10 @@ const SignUp = () => {
             setIsDisposableDomain(true);
             setModalMessage("Disposable email not allowed.");
             setModalVisible(true);
-            return;
+            setIsLoading(false);
+            return false;
         }
-
+        setIsLoading(false);
         return true; // Return true if all fields are filled and validation criteria are met
     };
 
@@ -253,7 +256,7 @@ const SignUp = () => {
     //called when user click signup button
     const handleSignUp = async () => {
 
-        if (!isCriteriaMet()) {
+        if (!(await isCriteriaMet())) {
             return;
         }
 
